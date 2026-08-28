@@ -261,6 +261,16 @@ nav{display:flex;border-top:2px solid var(--ink);background:var(--stock-2);
   pointer-events:none;user-select:none;-webkit-user-select:none}
 .colophon i{font-style:normal;opacity:.5;margin:0 2px}
 
+.qty{display:flex;align-items:stretch;gap:9px;margin-bottom:13px}
+.qty button{width:58px;border:1.5px solid var(--ink);background:var(--panel);
+  font-family:var(--disp);font-weight:800;font-size:22px;line-height:1;
+  box-shadow:2px 2px 0 var(--ink)}
+.qty button:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.qty .q{flex:1;border:1.5px solid var(--ink);background:var(--stock-2);display:grid;
+  place-items:center;padding:9px}
+.qty .q b{font-family:var(--disp);font-weight:800;font-size:26px;letter-spacing:-.04em;line-height:1}
+.qty .q span{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-60);margin-top:3px}
+
 .peoples{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:9px}
 .peep{display:flex;align-items:center;gap:7px;border:1.5px solid var(--ink);background:var(--panel);
   padding:5px 11px 5px 5px;box-shadow:2px 2px 0 rgba(32,32,28,.2)}
@@ -328,7 +338,17 @@ const CATS = {
   sweets:   {label:"Sweets",     bar:"acid"},
   ice:      {label:"Ice Cream",  bar:"prus"},
   biscuits: {label:"Biscuits",   bar:"mint"},
-  other:    {label:"Popcorn & Co", bar:"verm"}
+  other:    {label:"Popcorn & Co", bar:"verm"},
+  booze:    {label:"Drinks",      bar:"prus"}
+};
+
+/* how a drink is served, and therefore what we count */
+const SERVES = {
+  pint:    {one:"pint",    many:"pints",    step:0.5},
+  glass:   {one:"glass",   many:"glasses",  step:1},
+  measure: {one:"measure", many:"measures", step:1},
+  bottle:  {one:"bottle",  many:"bottles",  step:1},
+  can:     {one:"can",     many:"cans",     step:1}
 };
 
 const RAW = [
@@ -517,19 +537,105 @@ const RAW = [
 ["Jacob's","other",["Mini Cheddars Red Leicester","Ritz Crackers","Cheeselets Original"]],
 ["Whitworths","other",["Mixed Nuts","Raisins & Peanuts"]],
 ["Planters","other",["Cashews","Salted Peanuts"]],
-["Mr Porky","other",["Pork Crackles","Scratchings Original"]]
+["Mr Porky","other",["Pork Crackles","Scratchings Original"]],
+
+/* ── DRINKS ─────────────────────────────────────────────────
+   Served by the pint where you'd order a pint, by the measure
+   where you'd order a measure. ─────────────────────────────── */
+["Guinness","booze",["Draught","Extra Stout","Nitro IPA","West Indies Porter","0.0","Micro Draught"],"pint"],
+["Murphy's","booze",["Irish Stout"],"pint"],
+["Beamish","booze",["Irish Stout"],"pint"],
+["Smithwick's","booze",["Red Ale","Pale Ale","Blonde Ale"],"pint"],
+["Harp","booze",["Lager"],"pint"],
+["Kilkenny","booze",["Irish Cream Ale"],"pint"],
+["Heineken","booze",["Lager","0.0","Silver"],"pint"],
+["Carlsberg","booze",["Lager","Export"],"pint"],
+["Rockshore","booze",["Lager","Irish Cider","Light"],"pint"],
+["Hop House 13","booze",["Lager"],"pint"],
+["Coors","booze",["Light"],"pint"],
+["Budweiser","booze",["Lager"],"pint"],
+["Peroni","booze",["Nastro Azzurro"],"pint"],
+["Birra Moretti","booze",["Lager"],"pint"],
+["Corona","booze",["Extra"],"bottle"],
+["Erdinger","booze",["Weissbier"],"pint"],
+["Bulmers","booze",["Original","Light","Pear","Berry","Outcider"],"pint"],
+["Orchard Thieves","booze",["Cider","Berry"],"pint"],
+["Magners","booze",["Original","Berry"],"pint"],
+["Stonewell","booze",["Medium Dry Cider","Tobairin"],"bottle"],
+["Longueville House","booze",["Irish Cider"],"bottle"],
+["Mac Ivors","booze",["Traditional Dry","Plum & Ginger"],"bottle"],
+["Kopparberg","booze",["Mixed Fruit","Strawberry & Lime"],"bottle"],
+["O'Hara's","booze",["Irish Stout","Leann Follain","Irish Pale Ale","IPA","Red Ale"],"pint"],
+["Galway Bay","booze",["Full Sail IPA","Buried at Sea","Bay Ale","Althea"],"pint"],
+["Kinnegar","booze",["Rustbucket","Devil's Backbone","Scraggy Bay","Limeburner"],"pint"],
+["Whiplash","booze",["Body Riddle","Northern Lights","Rollover","Surrender to the Void"],"pint"],
+["White Hag","booze",["Little Fawn","Black Boar","Puca","Atlann"],"pint"],
+["Wicklow Wolf","booze",["Locavore","Elevation","Mammoth","Arcadia"],"pint"],
+["Rascals","booze",["Happy Days","Big Hopper","Yankee White"],"pint"],
+["Eight Degrees","booze",["Howling Gale","Full Irish","Barefoot Bohemian"],"pint"],
+["Franciscan Well","booze",["Rebel Red","Chieftain IPA","Friar Weisse"],"pint"],
+["Porterhouse","booze",["Oyster Stout","Hersbrucker","Plain Porter","Red Ale"],"pint"],
+["Metalman","booze",["Pale Ale","Equinox","Heatsink"],"pint"],
+["Trouble Brewing","booze",["Ambush","Dark Arts","Sabotage"],"pint"],
+["YellowBelly","booze",["Citra Pale Ale","Castaway"],"pint"],
+["Lough Gill","booze",["Mac Nutty","Wild Atlantic"],"pint"],
+["Larkin's","booze",["Sasquatch","Bootlegger"],"pint"],
+["Dutch Gold","booze",["Lager"],"can"],
+["Bavaria","booze",["8.6 Original","Lager"],"can"],
+["Jameson","booze",["Original","Black Barrel","Caskmates Stout Edition","Caskmates IPA Edition","Crested","18 Year"],"measure"],
+["Powers","booze",["Gold Label","John's Lane Release","Three Swallow"],"measure"],
+["Redbreast","booze",["12 Year","15 Year","Lustau Edition"],"measure"],
+["Spot Whiskey","booze",["Green Spot","Yellow Spot","Red Spot"],"measure"],
+["Midleton","booze",["Very Rare","Dair Ghaelach"],"measure"],
+["Bushmills","booze",["Original","Black Bush","10 Year Single Malt","16 Year"],"measure"],
+["Tullamore D.E.W.","booze",["Original","12 Year","Cider Cask"],"measure"],
+["Teeling","booze",["Small Batch","Single Grain","Single Malt"],"measure"],
+["Roe & Co","booze",["Blended Irish Whiskey"],"measure"],
+["Writers' Tears","booze",["Copper Pot","Red Head"],"measure"],
+["Connemara","booze",["Peated Single Malt","12 Year"],"measure"],
+["Kilbeggan","booze",["Traditional","Single Grain"],"measure"],
+["Slane","booze",["Irish Whiskey"],"measure"],
+["Dingle","booze",["Single Malt","Gin","Vodka"],"measure"],
+["Glendalough","booze",["Double Barrel","Wild Botanical Gin","Rose Gin"],"measure"],
+["Knappogue Castle","booze",["12 Year","16 Year"],"measure"],
+["Paddy","booze",["Irish Whiskey"],"measure"],
+["Proper No. Twelve","booze",["Irish Whiskey"],"measure"],
+["Gunpowder","booze",["Irish Gin","Sardinian Citrus","Californian Orange"],"measure"],
+["Bertha's Revenge","booze",["Milk Gin"],"measure"],
+["Blackwater","booze",["No. 5 Gin","Wexford Strawberry Gin"],"measure"],
+["Method and Madness","booze",["Gin","Single Pot Still"],"measure"],
+["Ha'penny","booze",["Dublin Gin"],"measure"],
+["Mor","booze",["Irish Gin"],"measure"],
+["Listoke","booze",["1777 Gin"],"measure"],
+["Boru","booze",["Irish Vodka"],"measure"],
+["Smirnoff","booze",["Red Label"],"measure"],
+["Absolut","booze",["Vodka"],"measure"],
+["Baileys","booze",["Original Irish Cream","Salted Caramel","Espresso Creme"],"glass"],
+["Coole Swan","booze",["Irish Cream"],"glass"],
+["Sheridan's","booze",["Coffee Layered Liqueur"],"glass"],
+["Irish Mist","booze",["Honey Liqueur"],"measure"],
+["Ban","booze",["Poitin"],"measure"],
+["Mad March Hare","booze",["Poitin"],"measure"],
+["Micil","booze",["Poitin","Heritage Gin"],"measure"],
+["Wine","booze",["Red","White","Rose","Prosecco","Champagne","Mulled"],"glass"],
+["Cocktails","booze",["Irish Coffee","Hot Whiskey","Gin & Tonic","Espresso Martini","Guinness & Blackcurrant"],"glass"],
+["WKD","booze",["Blue","Iron Brew"],"bottle"],
+["West Coast Cooler","booze",["Original","Rose"],"bottle"]
 
 ];
 
 /* flatten into a searchable list */
 const CATALOGUE = [];
-RAW.forEach(([brand, cat, items]) => items.forEach(name => {
+RAW.forEach(([brand, cat, items, serve]) => items.forEach(name => {
   CATALOGUE.push({
-    brand, cat, name,
+    brand, cat, name, serve: serve || null,
     key: (brand + "|" + name).toLowerCase(),
     hay: (brand + " " + name + " " + CATS[cat].label).toLowerCase()
   });
 }));
+
+/* the default serve for a category — drinks you add yourself come by the pint */
+const defaultServe = cat => cat === "booze" ? "pint" : null;
 
 /* every brand and every product name we know, for type-ahead when
    someone adds a snack of their own */
@@ -569,6 +675,8 @@ const clean = a => a.filter(e => e && e.brand && e.name && /^\d{4}-\d{2}-\d{2}$/
     name: String(e.name).trim(),
     cat: CATS[e.cat] ? e.cat : "other",
     member: e.member ? String(e.member) : "",
+    serve: SERVES[e.serve] ? e.serve : null,
+    qty: Math.min(60, Math.max(0.5, Number(e.qty) || 1)),
     rating: Math.min(10, Math.max(1, Math.round(Number(e.rating) || 1))),
     date: e.date,
     ts: Number(e.ts) || 0,        // ordering for repeats logged on the same day
@@ -624,6 +732,8 @@ function shelf(src) {
     s.firstRating = s.logs[s.count - 1].rating;
     s.drift = s.rating - s.firstRating;
     s.avg = s.logs.reduce((t, l) => t + l.rating, 0) / s.count;
+    s.serve = s.logs.find(l => l.serve) ? s.logs.find(l => l.serve).serve : null;
+    s.qty = s.serve ? s.logs.reduce((t, l) => t + (l.qty || 1), 0) : 0;
     return s;
   });
 }
@@ -689,6 +799,25 @@ const fmtDate = d => new Date(d + "T00:00:00")
 const fmtLong = d => new Date(d + "T00:00:00")
   .toLocaleDateString("en-IE", {day: "numeric", month: "long", year: "numeric"});
 
+/* "3 pints", "1 measure" — tidy for halves */
+function servedAs(n, serve) {
+  const s = SERVES[serve];
+  if (!s) return "";
+  const v = Math.round(n * 2) / 2;
+  const txt = v % 1 ? (v === 0.5 ? "\u00bd" : Math.floor(v) + "\u00bd") : String(v);
+  return txt + " " + (v === 1 ? s.one : s.many);
+}
+/* how much drink in the last seven days */
+function recentDrink() {
+  const since = new Date(Date.now() - 6 * 864e5);
+  const cut = new Date(since.getTime() - since.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+  const out = {};
+  entries.filter(e => e.serve && e.date >= cut).forEach(e => {
+    out[e.serve] = (out[e.serve] || 0) + (e.qty || 1);
+  });
+  return out;
+}
+
 /* ══════════════════════════════════════════════════════════════
    THE HOUSEHOLD — members, sync, and the arguments between them
    ══════════════════════════════════════════════════════════════ */
@@ -707,7 +836,8 @@ let cfg = readJSON(H_KEY, null);                 // {url, key, house, me:{id,nam
 let members = readJSON(M_KEY, []);               // [{id, name, colour, ts}]
 let pending = new Set(readJSON(P_KEY, []));      // log ids awaiting push
 let dead = new Set(readJSON(D_KEY, []));         // tombstones awaiting push
-let viewMember = "all";                          // whose shelf you're looking at
+let viewMember = "all";
+let hasQty = null;                               // does the project have the qty column?                          // whose shelf you're looking at
 let sync = {status: "off", msg: "", at: 0};
 let syncTimer = null;
 
@@ -760,7 +890,7 @@ function headers(extra) {
 }
 const rest = path => cfg.url.replace(/\/+$/, "") + "/rest/v1/" + path;
 
-const toRow = e => ({
+const toRow = e => Object.assign(hasQty === false ? {} : {qty: e.qty || 1, serve: e.serve || null}, {
   id: e.id, house: cfg.house, member: e.member || me().id,
   member_name: memberOf(e.member || me().id).name,
   brand: e.brand, name: e.name, cat: e.cat, rating: e.rating,
@@ -768,10 +898,22 @@ const toRow = e => ({
 });
 const fromRow = r => ({
   id: r.id, member: r.member, brand: r.brand, name: r.name, cat: r.cat,
-  rating: r.rating, date: r.date, ts: Number(r.ts) || 0, note: r.note || ""
+  rating: r.rating, date: r.date, ts: Number(r.ts) || 0, note: r.note || "",
+  serve: r.serve || null, qty: r.qty == null ? 1 : Number(r.qty)
 });
 
+/* Older households were set up before drinks existed. Rather than break their
+   sync, ask the project once whether it knows about quantities. */
+async function checkQty() {
+  if (hasQty !== null) return;
+  try {
+    const r = await fetch(rest("snack_logs?select=qty&limit=1"), {headers: headers()});
+    hasQty = r.ok;
+  } catch { hasQty = null; }
+}
+
 async function push() {
+  await checkQty();
   const sending = entries.filter(e => pending.has(e.id));
   const sentIds = sending.map(e => e.id);
   const deadIds = [...dead];
@@ -804,6 +946,7 @@ async function push() {
 }
 
 async function pull() {
+  await checkQty();
   const q = "?house=eq." + encodeURIComponent(cfg.house) + "&select=*&limit=5000";
   const [lr, mr] = await Promise.all([
     fetch(rest("snack_logs" + q), {headers: headers()}),
@@ -816,7 +959,12 @@ async function pull() {
   rows.forEach(r => {
     if (r.deleted) { byId.delete(r.id); dead.delete(r.id); return; }
     if (pending.has(r.id)) return;               // local edit not yet pushed wins
-    byId.set(r.id, fromRow(r));
+    const next = fromRow(r);
+    // If this project predates drinks, the server has no idea about pints —
+    // so don't let its silence wipe what this phone has counted.
+    const prev = byId.get(r.id);
+    if (hasQty === false && prev) { next.qty = prev.qty; next.serve = prev.serve; }
+    byId.set(r.id, next);
   });
   entries = clean([...byId.values()]);
   save();
@@ -833,15 +981,15 @@ async function pull() {
 async function doSync(quiet) {
   if (!inHouse() || sync.status === "syncing") return;
   sync = {status: "syncing", msg: "", at: sync.at};
-  if (!quiet) render();
+  if (!quiet) render({background: true});
   try {
     await push();
     await pull();
     sync = {status: "idle", msg: "", at: Date.now()};
-    render();
+    render({background: true});
   } catch (err) {
     sync = {status: "error", msg: String(err.message || err), at: sync.at};
-    render();
+    render({background: true});
     if (!quiet) toast("Sync trouble", sync.msg.slice(0, 90), true);
   }
 }
@@ -1010,6 +1158,13 @@ function sheetHouse() {
     return `<h3>Start a household</h3>
       <p class="lede">One free Supabase project holds the whole house. Paste its details once,
         then send everyone else a link — they won't have to type any of this.</p>
+      <div class="lbl">Got an invite link?</div>
+      <input class="fld" id="hPaste" type="text" placeholder="Paste it here"
+        autocapitalize="off" autocorrect="off" spellcheck="false">
+      <button class="blk wide" data-a="paste-invite">Use invite link</button>
+      <div class="hint" style="text-align:left;margin:9px 0 16px">
+        Fills in everything below. Handy on iPhone, where the installed app can't
+        open the link itself.</div>
       <div class="lbl">Your name</div>
       <input class="fld" id="hName" type="text" placeholder="e.g. Aoife" autocapitalize="words"
         value="${esc(draft.name || "")}">
@@ -1056,6 +1211,10 @@ function sheetHouse() {
       <button class="blk soft" data-a="leave">Leave house</button>
     </div>
     ${sync.status === "error" ? `<div class="verdict lo" style="margin-top:12px">${esc(sync.msg)}</div>` : ""}
+    ${hasQty === false ? `<div class="verdict mid" style="margin-top:12px;font-style:normal">
+      Pints and measures are being counted on this phone but not shared with the house yet.
+      Run <b>supabase-update.sql</b> in the Supabase SQL Editor to switch that on. Everything
+      else syncs as normal in the meantime.</div>` : ""}
     <button class="shut" data-a="close">Close</button>`;
 }
 
@@ -1093,17 +1252,24 @@ function peopleBlock() {
         : "Pick yourself from the list if you've used Snacked on another phone."}</div>`;
 }
 
-/* join via #join=… link */
-function joinFromHash() {
-  const m = location.hash.match(/join=([^&]+)/);
-  if (!m) return false;
+/* Pull the details out of an invite link, however it arrived — tapped,
+   or pasted in by someone who installed the app before joining. */
+function readInvite(text) {
+  const m = String(text || "").match(/join=([^&\s]+)/);
+  if (!m) return null;
   try {
-    const p = JSON.parse(atob(decodeURIComponent(m[1])));
-    if (!p.u || !p.k || !p.h) return false;
-    history.replaceState(null, "", location.pathname);
-    sheet = {mode: "house", draft: {url: p.u, key: p.k, house: p.h, colour: "prus"}};
-    return true;
-  } catch { return false; }
+    const p = JSON.parse(atob(decodeURIComponent(m[1]).trim()));
+    if (!p.u || !p.k || !p.h) return null;
+    return {url: p.u, key: p.k, house: p.h};
+  } catch { return null; }
+}
+
+function joinFromHash() {
+  const inv = readInvite(location.hash);
+  if (!inv) return false;
+  history.replaceState(null, "", location.pathname);
+  sheet = {mode: "house", draft: Object.assign({colour: "prus"}, inv)};
+  return true;
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1131,7 +1297,8 @@ function shelfRow(s, solo) {
     <div class="t">
       <b>${esc(s.name)}</b>
       <span>${esc(s.brand)} · <i>${CATS[s.cat].label}</i></span>
-      <span>Last had ${fmtDate(s.last)}${drift}</span>
+      <span>Last had ${fmtDate(s.last)}${drift}${
+        s.serve ? " · " + servedAs(s.qty, s.serve) + " all told" : ""}</span>
       ${faces}
     </div>
     ${scoreBox(s)}
@@ -1257,6 +1424,17 @@ function viewTally() {
     <div class="none">Nothing counted yet. Log a snack and this page fills up with rankings,
       streaks, category sweeps and a few marks worth earning.</div></div>
     <button class="blk go wide" data-a="open-add">Log your first snack</button>
+    ${(() => {
+      const r = recentDrink(), keys = Object.keys(r);
+      if (!keys.length) return "";
+      return `<div class="sheetish">
+        <div class="hd soft">Drinks <span>last 7 days</span></div>
+        <div class="marks" style="gap:9px">${keys.map(k =>
+          `<span class="mark" style="background:var(--stock-2);color:var(--ink)">${
+            servedAs(r[k], k)}</span>`).join("")}</div>
+      </div>`;
+    })()}
+
     ${houseBlock()}</div>`;
 
   return `<div class="pad stack">
@@ -1301,6 +1479,17 @@ function viewTally() {
       <div class="marks">${mk.map(m =>
         `<span class="mark${m[1] ? "" : " off"}">${m[0]}</span>`).join("")}</div>
     </div>
+
+    ${(() => {
+      const r = recentDrink(), keys = Object.keys(r);
+      if (!keys.length) return "";
+      return `<div class="sheetish">
+        <div class="hd soft">Drinks <span>last 7 days</span></div>
+        <div class="marks" style="gap:9px">${keys.map(k =>
+          `<span class="mark" style="background:var(--stock-2);color:var(--ink)">${
+            servedAs(r[k], k)}</span>`).join("")}</div>
+      </div>`;
+    })()}
 
     ${houseBlock()}
 
@@ -1427,8 +1616,8 @@ function sheetSearch() {
   return `<h3>What did you eat?</h3>
     <p class="lede">${CATALOGUE.length} snacks in the catalogue. Start typing a brand or a flavour.</p>
     <input class="fld" id="addSearch" type="text" placeholder="Tayto, Brunch, Kimberley…"
-      autocomplete="off" autocapitalize="words">
-    <div class="results" id="results">${searchResults("")}</div>
+      autocomplete="off" autocapitalize="words" value="${esc(sheet.q || "")}">
+    <div class="results" id="results">${searchResults(sheet.q || "")}</div>
     <button class="blk wide" data-a="custom">Add your own</button>
     <button class="shut" data-a="close">Close</button>`;
 }
@@ -1442,6 +1631,13 @@ function sheetRate() {
     <div class="pad10">${[1,2,3,4,5,6,7,8,9,10].map(n =>
       `<button data-a="rate" data-v="${n}"${sheet.rating === n ? ' class="on"' : ""}>${n}</button>`).join("")}</div>
     <div class="verdict ${band(sheet.rating)}">${verdict(sheet.rating)}</div>
+    ${sheet.serve ? `<div class="lbl">How many</div>
+      <div class="qty">
+        <button data-a="qty" data-v="down">&minus;</button>
+        <div class="q"><b>${servedAs(sheet.qty, sheet.serve).split(" ")[0]}</b>
+          <span>${SERVES[sheet.serve][sheet.qty === 1 ? "one" : "many"]}</span></div>
+        <button data-a="qty" data-v="up">+</button>
+      </div>` : ""}
     <div class="lbl">When</div>
     <input class="fld" id="rateDate" type="date" value="${sheet.date}" max="${today()}">
     <div class="lbl">Note (optional)</div>
@@ -1516,6 +1712,8 @@ function sheetDetail() {
   return `<h3>${esc(s.name)}</h3>
     <p class="lede">${esc(s.brand)} · ${CATS[s.cat].label}</p>
     <div class="nums" style="margin-bottom:13px">
+      ${s.serve ? `<div class="num"><b>${servedAs(s.qty, s.serve).split(" ")[0]}</b>
+        <span>${SERVES[s.serve].many}</span></div>` : ""}
       <div class="num"><b>${s.count}</b><span>Times</span></div>
       <div class="num"><b>${s.rating}</b><span>Current</span></div>
       <div class="num"><b>${s.avg.toFixed(1)}</b><span>Average</span></div>
@@ -1537,7 +1735,8 @@ function sheetDetail() {
       ${l.member ? mug(l.member, 22) : ""}
       <span class="r">${l.rating}</span>
       <span class="d">${l.member && inHouse() ? esc(memberOf(l.member).name) + " · " : ""}${
-        fmtLong(l.date)}${l.note ? `<q>${esc(l.note)}</q>` : ""}</span>
+        fmtLong(l.date)}${l.serve ? " · " + servedAs(l.qty, l.serve) : ""}${
+        l.note ? `<q>${esc(l.note)}</q>` : ""}</span>
       <button class="x" data-a="del-log" data-v="${l.id}">Remove</button></div>`).join("")}</div>
     <button class="blk go wide" data-a="again" data-v="${esc(s.key)}">Had it again</button>
     <button class="shut" data-a="close">Close</button>`;
@@ -1550,15 +1749,25 @@ function renderSheet() {
     : sheet.mode === "custom" ? sheetCustom()
     : sheet.mode === "house" ? sheetHouse() : sheetDetail();
   $("layer").innerHTML = `<div class="scrim" data-a="scrim"><div class="slip" id="slip">${body}</div></div>`;
-  if (sheet.mode === "search") setTimeout(() => $("addSearch")?.focus(), 60);
+  // only grab focus when the sheet is first opened, never on a later redraw
+  if (sheet.mode === "search" && !sheet.q && !isTyping())
+    setTimeout(() => { if (!isTyping()) $("addSearch")?.focus(); }, 60);
 }
 
 /* ══════════════════════════════════════════════════════════════
    RENDER
    ══════════════════════════════════════════════════════════════ */
 let toastTimer = null;
+let pendingRender = false;
+
+/* Is the person mid-keystroke? Background syncs must not redraw over them. */
+function isTyping() {
+  const el = document.activeElement;
+  return !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT");
+}
 function toast(title, msg, warn) {
   clearTimeout(toastTimer);
+  $("app").querySelectorAll(".toast").forEach(o => o.remove());   // never stack
   const t = document.createElement("div");
   t.className = "toast" + (warn ? " warn" : "");
   t.innerHTML = `<b>${esc(title)}</b>${esc(msg)}`;
@@ -1566,7 +1775,11 @@ function toast(title, msg, warn) {
   toastTimer = setTimeout(() => t.remove(), 2600);
 }
 
-function render() {
+function render(opts) {
+  // A sync landing mid-search used to wipe the box. Defer instead, and
+  // catch up the moment the field loses focus.
+  if (opts && opts.background && isTyping()) { pendingRender = true; return; }
+  pendingRender = false;
   const st = streak();
   const syncPill = !inHouse() ? ""
     : `<button class="hbtn${sync.status === "error" ? " err" : sync.status === "syncing" ? " busy" : ""}"
@@ -1588,13 +1801,15 @@ function render() {
    ══════════════════════════════════════════════════════════════ */
 function spinDare() {
   const t = tried();
-  const left = CATALOGUE.filter(x => !t.has(x.key));
+  // The Dare is a nudge to try something new, so it stays off the drink.
+  const left = CATALOGUE.filter(x => !t.has(x.key) && x.cat !== "booze");
   dare = left.length ? left[Math.floor(Math.random() * left.length)] : null;
 }
 
 function openRate(item) {
+  const serve = item.serve || defaultServe(item.cat);
   sheet = {mode: "rate", brand: item.brand, name: item.name, cat: item.cat,
-    rating: 7, date: today(), note: ""};
+    serve, qty: serve ? 1 : 0, rating: 7, date: today(), note: ""};
   renderSheet();
 }
 
@@ -1640,6 +1855,12 @@ function act(a, v) {
     }
 
     case "rate": sheet.rating = +v; renderSheet(); break;
+    case "qty": {
+      const step = SERVES[sheet.serve].step;
+      sheet.qty = Math.min(60, Math.max(step, sheet.qty + (v === "up" ? step : -step)));
+      renderSheet();
+      break;
+    }
     case "save": {
       const d = $("rateDate").value;
       if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) { toast("Hold on", "That date won't do.", true); return; }
@@ -1648,6 +1869,7 @@ function act(a, v) {
       const logId = newId();
       entries.push({id: logId, brand: sheet.brand, name: sheet.name, cat: sheet.cat,
         rating: sheet.rating, date: d, ts: Date.now(), note: sheet.note,
+        serve: sheet.serve || null, qty: sheet.serve ? sheet.qty : 1,
         member: inHouse() ? me().id : ""});
       save();
       if (inHouse()) { pending.add(logId); savePending(); scheduleSync(); }
@@ -1664,7 +1886,12 @@ setInterval(() => { if (!document.hidden && inHouse()) doSync(true); }, 45000);
 render();
 if (inHouse()) doSync(true);
       if (hit) toast("Milestone", `That's ${hit} snacks logged. Steady on.`);
-      else toast("On the shelf", `${name} — ${entries[entries.length - 1].rating}/10.`);
+      else {
+        const last = entries[entries.length - 1];
+        toast("On the shelf", last.serve
+          ? `${servedAs(last.qty, last.serve)} of ${name} — ${last.rating}/10.`
+          : `${name} — ${last.rating}/10.`);
+      }
       break;
     }
 
@@ -1724,6 +1951,14 @@ if (inHouse()) doSync(true);
         sheet.draft.colour = p.colour;
       }
       renderSheet();
+      break;
+    }
+    case "paste-invite": {
+      const inv = readInvite($("hPaste").value);
+      if (!inv) { toast("Not quite", "That doesn't look like an invite link.", true); return; }
+      sheet.draft = Object.assign({}, sheet.draft, inv, {name: $("hName").value});
+      renderSheet();
+      toast("Got it", "House " + inv.house + " — now put your name in.");
       break;
     }
     case "house-save": {
@@ -1829,7 +2064,10 @@ app.addEventListener("click", e => {
 
 app.addEventListener("input", e => {
   if (e.target.id === "shelfSearch") { shelfQ = e.target.value; $("shelfList").innerHTML = shelfList(); }
-  if (e.target.id === "addSearch") { $("results").innerHTML = searchResults(e.target.value); }
+  if (e.target.id === "addSearch") {
+    sheet.q = e.target.value;
+    $("results").innerHTML = searchResults(sheet.q);
+  }
   if (e.target.id === "cBrand" || e.target.id === "cName") {
     const field = e.target.id === "cBrand" ? "brand" : "name";
     const pos = e.target.selectionStart;
@@ -1843,6 +2081,10 @@ app.addEventListener("input", e => {
     if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch {} }
   }
 });
+
+app.addEventListener("focusout", () => setTimeout(() => {
+  if (pendingRender && !isTyping()) render();
+}, 60));
 
 app.addEventListener("change", e => {
   if (e.target.id === "shelfSort") { shelfSort = e.target.value; $("shelfList").innerHTML = shelfList(); }
