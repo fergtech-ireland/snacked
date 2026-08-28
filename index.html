@@ -1,0 +1,1898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#E4E0D2">
+<title>Snacked</title>
+<meta name="description" content="A tally of every Irish snack you've eaten.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Snacked">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --stock:#E4E0D2;--stock-2:#D8D3C2;--panel:#F0EDE1;
+  --ink:#20201C;--ink-60:#6F6B5E;--ink-30:#A9A493;
+  --verm:#E8452C;--prus:#17375E;--acid:#D9BE33;--mint:#5E9E7E;--plum:#7B4B77;
+  --disp:"Syne",sans-serif;--ui:"Instrument Sans",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;border-radius:0}
+html,body{height:100%}
+body{background:#C9C5B6;display:flex;justify-content:center;font-family:var(--ui);color:var(--ink);
+  -webkit-font-smoothing:antialiased;font-size:14px}
+button,input,select,textarea{font-family:inherit;color:inherit}
+button{cursor:pointer}
+#app{width:100%;max-width:430px;min-height:100vh;height:100vh;display:flex;flex-direction:column;
+  position:relative;overflow:hidden;background:var(--stock);
+  background-image:repeating-linear-gradient(23deg,rgba(32,32,28,.016) 0 1px,transparent 1px 4px)}
+
+/* ══ top bar ══ */
+header{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;
+  border-bottom:2px solid var(--ink);position:relative;z-index:5;background:var(--stock);flex:none}
+.logo{font-family:var(--disp);font-weight:800;font-size:19px;letter-spacing:-.045em;
+  text-transform:uppercase;user-select:none}
+.logo i{font-style:normal;color:var(--verm)}
+.hbits{display:flex;gap:8px;align-items:center}
+.hcount{border:1.5px solid var(--ink);background:var(--panel);padding:4px 8px;font-size:10px;
+  font-weight:600;line-height:1.3;text-align:right}
+.hcount b{font-family:var(--disp);font-weight:800;font-size:13px;letter-spacing:-.03em;display:block}
+.hcount.streak{background:var(--acid)}
+
+main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px}
+.pad{padding:14px}
+.stack>*+*{margin-top:13px}
+
+/* ══ shared furniture ══ */
+.sheetish{border:1.5px solid var(--ink);background:var(--panel)}
+.hd{background:var(--ink);color:var(--stock);font-family:var(--disp);font-weight:800;
+  font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;padding:7px 12px;
+  display:flex;justify-content:space-between;align-items:center;gap:8px}
+.hd span{font-family:var(--ui);font-weight:500;font-size:10px;letter-spacing:.04em;color:var(--ink-30)}
+.hd.soft{background:var(--stock-2);color:var(--ink-60)}
+.none{padding:15px 12px;font-size:12.5px;line-height:1.55;color:var(--ink-60);font-style:italic}
+.blk{border:1.5px solid var(--ink);background:var(--stock);color:var(--ink);font-family:var(--disp);
+  font-weight:700;font-size:13.5px;text-transform:uppercase;letter-spacing:-.02em;padding:14px 8px;
+  box-shadow:3px 3px 0 var(--ink);transition:transform .07s,box-shadow .07s}
+.blk:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+.blk.go{background:var(--verm);color:#F7F3E6}
+.blk.soft{background:var(--stock-2);color:var(--ink-60);border-color:var(--ink-30);box-shadow:none}
+.blk.mini{font-size:11px;padding:9px 11px;box-shadow:2px 2px 0 var(--ink)}
+.blk.wide{width:100%}
+.acts{display:flex;gap:9px}
+.acts .blk{flex:1}
+.hint{font-size:12px;color:var(--ink-60);text-align:center;line-height:1.5}
+.hint u{color:var(--verm);cursor:pointer;font-weight:600}
+
+/* ══ search + chips ══ */
+.search{display:flex;padding:11px 14px;border-bottom:2px solid var(--ink);background:var(--stock-2);flex:none}
+.search input{flex:1;background:var(--panel);border:1.5px solid var(--ink);padding:9px 11px;
+  font-family:var(--ui);font-size:16px;color:var(--ink);outline:none}
+.search input:focus{border-color:var(--verm)}
+.chiprow{display:flex;gap:7px;overflow-x:auto;padding:10px 14px;scrollbar-width:none;
+  border-bottom:1.5px solid var(--ink);background:var(--stock);flex:none}
+.chiprow::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1.5px solid var(--ink);background:var(--stock);padding:6px 11px;
+  font-family:var(--disp);font-weight:700;font-size:11px;text-transform:uppercase;white-space:nowrap}
+.chip.on{background:var(--ink);color:var(--stock)}
+.areabar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--stock-2);
+  border-bottom:1.5px solid var(--ink);font-size:12px;flex:none}
+.areabar .pin{width:7px;height:7px;background:var(--verm);border:1px solid var(--ink);flex:none}
+.areabar b{font-weight:600}
+.areabar select{margin-left:auto;background:var(--stock);border:1.5px solid var(--ink);
+  font-family:var(--ui);font-size:11.5px;font-weight:600;color:var(--ink);padding:4px 7px;outline:none}
+
+/* ══ shelf rows ══ */
+.row{display:flex;align-items:center;gap:11px;padding:11px 13px;border-bottom:1.5px solid var(--ink);
+  background:var(--stock);cursor:pointer;width:100%;text-align:left;border-left:none;border-right:none;border-top:none}
+.row:active{background:var(--panel)}
+.row .n{font-family:var(--disp);font-weight:800;font-size:23px;letter-spacing:-.05em;
+  color:var(--verm);line-height:.9;flex:none;min-width:26px}
+.row .n small{font-family:var(--ui);font-weight:600;font-size:9px;letter-spacing:.06em;
+  display:block;color:var(--ink-30);text-transform:uppercase;margin-top:4px}
+.row .t{flex:1;min-width:0}
+.row .t b{font-weight:600;font-size:14px;line-height:1.25;display:block}
+.row .t span{display:block;font-size:11px;color:var(--ink-60);margin-top:3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .t i{font-style:normal;text-transform:uppercase;letter-spacing:.07em;font-size:9.5px;color:var(--ink-30)}
+.score{flex:none;width:40px;height:40px;border:1.5px solid var(--ink);display:grid;place-items:center;
+  font-family:var(--disp);font-weight:800;font-size:16px;letter-spacing:-.04em;background:var(--stock-2);color:var(--ink-60)}
+.score.hi{background:var(--mint);color:var(--panel)}
+.score.mid{background:var(--acid);color:var(--ink)}
+.score.lo{background:var(--stock-2);color:var(--ink-30)}
+.score.new{background:var(--panel);color:var(--ink-30);font-size:11px}
+
+/* ══ the dare ══ */
+.dare{border:2px solid var(--ink);background:var(--acid);padding:13px;box-shadow:3px 3px 0 var(--ink)}
+.dare .k{font-family:var(--disp);font-weight:800;font-size:10.5px;text-transform:uppercase;
+  letter-spacing:.09em;color:var(--verm);margin-bottom:7px}
+.dare .big{font-family:var(--disp);font-weight:800;font-size:25px;line-height:.95;
+  letter-spacing:-.045em;text-transform:uppercase;margin-bottom:4px}
+.dare .sub{font-size:12px;color:var(--ink-60);margin-bottom:12px}
+.dare .row2{display:flex;gap:9px}
+.dare .row2 .blk{flex:1;background:var(--stock)}
+.dare .row2 .blk.go{flex:1.3}
+
+/* ══ progress ══ */
+.prog{padding:11px 12px;border-top:1px dotted rgba(32,32,28,.22)}
+.prog:first-child{border-top:none}
+.prog .lab{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;margin-bottom:6px}
+.prog .lab b{font-weight:600}
+.prog .lab span{font-size:11px;color:var(--ink-60)}
+.bar{height:12px;border:1.5px solid var(--ink);background:var(--stock-2);position:relative;overflow:hidden}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--verm);
+  background-image:repeating-linear-gradient(45deg,rgba(32,32,28,.14) 0 3px,transparent 3px 7px)}
+.bar.mint i{background-color:var(--mint)}
+.bar.acid i{background-color:var(--acid)}
+.bar.prus i{background-color:var(--prus)}
+.bar.plum i{background-color:var(--plum)}
+
+/* ══ tally ══ */
+.nums{display:flex;border:1.5px solid var(--ink);background:var(--panel)}
+.num{flex:1;border-right:1.5px solid var(--ink);padding:11px 4px;text-align:center}
+.num:last-child{border-right:none}
+.num b{display:block;font-family:var(--disp);font-weight:800;font-size:22px;letter-spacing:-.04em;line-height:1}
+.num span{display:block;font-size:8.5px;color:var(--ink-60);margin-top:5px;text-transform:uppercase;letter-spacing:.08em}
+.milestone{border:2px solid var(--ink);background:var(--stock-2);padding:14px;display:flex;gap:12px;
+  align-items:center;box-shadow:3px 3px 0 var(--ink)}
+.milestone .big{font-family:var(--disp);font-weight:800;font-size:36px;color:var(--verm);
+  letter-spacing:-.05em;line-height:.85;flex:none;-webkit-text-stroke:1.5px var(--ink)}
+.milestone .t{flex:1;font-size:13px;line-height:1.45}
+.milestone .t b{font-weight:600}
+.rank{display:flex;align-items:baseline;gap:8px;padding:9px 12px;font-size:13.5px}
+.rank+.rank{border-top:1px dotted rgba(32,32,28,.2)}
+.rank .p{font-family:var(--disp);font-weight:800;font-size:12px;color:var(--verm);flex:none;width:17px}
+.rank .nm{flex:none;max-width:70%;line-height:1.3}
+.rank .nm i{display:block;font-style:normal;font-size:11px;color:var(--ink-60);margin-top:2px}
+.rank .d{flex:1;border-bottom:1px dotted var(--ink-30);transform:translateY(-3px);min-width:10px}
+.rank .v{font-weight:600;flex:none}
+.marks{display:flex;flex-wrap:wrap;gap:7px;padding:11px 12px}
+.mark{border:1.5px solid var(--ink);background:var(--mint);color:var(--panel);padding:6px 9px;
+  font-family:var(--disp);font-weight:800;font-size:10px;text-transform:uppercase;letter-spacing:.03em;
+  box-shadow:2px 2px 0 rgba(32,32,28,.25)}
+.mark.off{background:var(--stock-2);color:var(--ink-30);box-shadow:none;border-color:var(--ink-30)}
+.feed{padding:9px 12px;font-size:12.5px;line-height:1.45;display:flex;gap:9px;align-items:baseline}
+.feed+.feed{border-top:1px dotted rgba(32,32,28,.2)}
+.feed .dt{font-size:10px;color:var(--ink-30);text-transform:uppercase;letter-spacing:.06em;flex:none;width:52px}
+.feed b{font-weight:600}
+.feed .sc{margin-left:auto;font-family:var(--disp);font-weight:800;font-size:13px;flex:none;color:var(--ink-60)}
+
+/* ══ bottom nav ══ */
+nav{display:flex;border-top:2px solid var(--ink);background:var(--stock-2);
+  padding-bottom:env(safe-area-inset-bottom);position:relative;z-index:6;flex:none}
+.tab{flex:1;background:none;border:none;border-right:1.5px solid var(--ink);
+  font-family:var(--disp);font-weight:700;font-size:9.5px;text-transform:uppercase;
+  color:var(--ink-60);padding:9px 2px 11px;position:relative;letter-spacing:-.005em}
+.tab:last-child{border-right:none}
+.tab .gl{display:block;font-size:17px;line-height:1;margin-bottom:4px;font-weight:800}
+.tab.on{background:var(--ink);color:var(--stock)}
+.tab.add{background:var(--verm);color:var(--panel);border-right-color:var(--ink)}
+.tab.add .gl{font-size:21px}
+
+/* ══ sheets ══ */
+.scrim{position:absolute;inset:0;background:rgba(32,32,28,.5);z-index:20;display:flex;
+  align-items:flex-end;animation:f .16s}
+@keyframes f{from{opacity:0}to{opacity:1}}
+.slip{width:100%;background:var(--stock);border-top:2px solid var(--ink);
+  padding:18px 16px calc(20px + env(safe-area-inset-bottom));max-height:92%;overflow-y:auto;
+  animation:u .26s cubic-bezier(.2,.85,.3,1);
+  background-image:repeating-linear-gradient(23deg,rgba(32,32,28,.016) 0 1px,transparent 1px 4px)}
+@keyframes u{from{transform:translateY(100%)}to{transform:none}}
+.slip h3{font-family:var(--disp);font-weight:800;font-size:24px;line-height:.94;letter-spacing:-.045em;
+  text-transform:uppercase;margin-bottom:8px}
+.slip p.lede{font-size:13px;line-height:1.55;color:var(--ink-60);margin-bottom:14px}
+.fld{width:100%;background:var(--panel);border:1.5px solid var(--ink);padding:13px;color:var(--ink);
+  font-family:var(--ui);font-size:16px;outline:none;margin-bottom:11px}
+.fld:focus{border-color:var(--verm);border-width:2px}
+.lbl{font-family:var(--disp);font-weight:800;font-size:10px;text-transform:uppercase;
+  letter-spacing:.09em;color:var(--ink-60);margin-bottom:6px}
+.shut{background:none;border:none;color:var(--ink-30);font-size:12px;display:block;
+  margin:14px auto 0;text-decoration:underline}
+.pickrow{display:flex;align-items:center;gap:10px;padding:10px 2px;width:100%;text-align:left;
+  border:none;border-bottom:1px dotted rgba(32,32,28,.22);background:none}
+.pickrow:active{background:var(--panel)}
+.pickrow .t{flex:1;min-width:0}
+.pickrow b{font-weight:600;font-size:13.5px;line-height:1.3}
+.pickrow span{display:block;font-size:11px;color:var(--ink-60);margin-top:2px}
+.pickrow em{font-style:normal;text-transform:uppercase;letter-spacing:.07em;font-size:9.5px;color:var(--ink-30)}
+.tick{flex:none;border:1.5px solid var(--ink);background:var(--mint);color:var(--panel);
+  font-family:var(--disp);font-weight:800;font-size:9px;padding:3px 6px;text-transform:uppercase}
+.results{max-height:46vh;overflow-y:auto;margin-bottom:12px}
+
+/* rating pad */
+.pad10{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:13px}
+.pad10 button{border:1.5px solid var(--ink);background:var(--panel);padding:13px 2px;
+  font-family:var(--disp);font-weight:800;font-size:16px;letter-spacing:-.04em;
+  box-shadow:2px 2px 0 var(--ink);transition:transform .06s,box-shadow .06s}
+.pad10 button:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.pad10 button.on{background:var(--verm);color:#F7F3E6}
+.verdict{border:1.5px solid var(--ink);background:var(--stock-2);border-left:4px solid var(--ink-30);
+  padding:9px 11px;font-size:12.5px;line-height:1.4;margin-bottom:12px;font-style:italic;color:var(--ink-60)}
+.verdict.hi{background:var(--panel);border-left-color:var(--mint);color:var(--ink);font-style:normal}
+.verdict.mid{border-left-color:var(--acid)}
+.verdict.lo{border-left-color:var(--verm)}
+.hist{border:1.5px solid var(--ink);background:var(--panel);margin-bottom:12px;max-height:34vh;overflow-y:auto}
+.hline{display:flex;align-items:baseline;gap:9px;padding:8px 11px;font-size:12.5px}
+.hline+.hline{border-top:1px dotted rgba(32,32,28,.2)}
+.hline .d{color:var(--ink-60);flex:1}
+.hline .r{font-family:var(--disp);font-weight:800;font-size:13px;flex:none}
+.hline .x{background:none;border:none;color:var(--verm);font-size:11px;text-decoration:underline;flex:none}
+.hline q{quotes:none;font-style:italic;color:var(--ink-60);display:block;font-size:11.5px;margin-top:3px}
+
+/* ══ the household ══ */
+.mug{display:inline-grid;place-items:center;width:26px;height:26px;border:1.5px solid var(--ink);
+  font-family:var(--disp);font-weight:800;font-size:11px;color:var(--panel);flex:none;line-height:1}
+.mugs{display:flex;gap:4px;align-items:center}
+.mugbar{display:flex;gap:11px;overflow-x:auto;scrollbar-width:none;margin-bottom:14px;padding-bottom:2px}
+.mugbar::-webkit-scrollbar{display:none}
+.mugc{flex:none;text-align:center;width:60px}
+.mugc b{display:block;font-weight:600;font-size:11px;margin-top:5px;line-height:1.2;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mugc span{display:block;font-size:9px;color:var(--ink-30);text-transform:uppercase;letter-spacing:.06em}
+.swatches{display:flex;gap:8px;margin-bottom:13px}
+.sw{width:38px;height:38px;border:1.5px solid var(--ink);box-shadow:2px 2px 0 rgba(32,32,28,.25)}
+.sw.on{box-shadow:0 0 0 3px var(--stock),0 0 0 5px var(--ink)}
+.hscore{display:inline-flex;align-items:center;gap:4px;border:1.5px solid var(--ink);
+  background:var(--stock-2);font-size:10px;font-weight:600;padding:2px 5px;margin-top:4px}
+.hscore b{font-family:var(--disp);font-weight:800;font-size:11px}
+.split{padding:11px 12px}
+.split+.split{border-top:1px dotted rgba(32,32,28,.2)}
+.split .nm{font-weight:600;font-size:13.5px;line-height:1.3;margin-bottom:8px}
+.split .nm i{display:block;font-style:normal;font-size:11px;color:var(--ink-60);margin-top:2px}
+.split .vs{display:flex;align-items:center;gap:9px}
+.split .side{display:flex;align-items:center;gap:7px;flex:1;min-width:0}
+.split .side b{font-family:var(--disp);font-weight:800;font-size:19px;letter-spacing:-.04em}
+.split .side span{font-size:11px;color:var(--ink-60);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.split .gap{font-family:var(--disp);font-weight:800;font-size:10px;text-transform:uppercase;
+  letter-spacing:.06em;color:var(--verm);flex:none;border:1.5px solid var(--ink);
+  background:var(--acid);padding:3px 6px}
+.hbtn{border:1.5px solid var(--ink);background:var(--panel);padding:3px 5px;display:flex;
+  align-items:center;gap:5px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.hbtn.err{background:var(--verm);color:var(--panel)}
+.hbtn.busy{background:var(--acid)}
+
+.colophon{text-align:center;padding:20px 14px 18px;font-family:var(--disp);font-weight:700;
+  font-size:8.5px;text-transform:uppercase;letter-spacing:.13em;color:var(--ink-30);
+  opacity:.75;line-height:1.4;
+  /* a printer's mark: never tappable, never selectable, never in the way */
+  pointer-events:none;user-select:none;-webkit-user-select:none}
+.colophon i{font-style:normal;opacity:.5;margin:0 2px}
+
+.peoples{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:9px}
+.peep{display:flex;align-items:center;gap:7px;border:1.5px solid var(--ink);background:var(--panel);
+  padding:5px 11px 5px 5px;box-shadow:2px 2px 0 rgba(32,32,28,.2)}
+.peep b{font-weight:600;font-size:12.5px}
+.peep.on{background:var(--ink);color:var(--stock);box-shadow:none}
+.peep .newmark{display:grid;place-items:center;width:30px;height:30px;border:1.5px solid currentColor;
+  font-family:var(--disp);font-weight:800;font-size:15px;flex:none}
+
+.sugs{display:flex;gap:6px;flex-wrap:wrap;margin:-4px 0 12px}
+.sug{border:1.5px solid var(--ink);background:var(--panel);padding:6px 9px;font-size:12px;
+  font-family:var(--ui);line-height:1.2;box-shadow:2px 2px 0 rgba(32,32,28,.15)}
+.sug:active{transform:translate(1px,1px);box-shadow:1px 1px 0 rgba(32,32,28,.15)}
+
+.mfilter{display:flex;gap:7px;overflow-x:auto;padding:10px 14px;scrollbar-width:none;
+  border-bottom:1.5px solid var(--ink);background:var(--stock-2)}
+.mfilter::-webkit-scrollbar{display:none}
+.mf{flex:none;display:flex;align-items:center;gap:6px;border:1.5px solid var(--ink);
+  background:var(--stock);padding:4px 9px 4px 4px;font-family:var(--disp);font-weight:700;
+  font-size:11px;text-transform:uppercase;white-space:nowrap;color:var(--ink)}
+.mf.on{background:var(--ink);color:var(--stock)}
+.mf .allmark{display:grid;place-items:center;width:24px;height:24px;border:1.5px solid currentColor;
+  font-size:12px;flex:none}
+.feed .by{font-style:normal;color:var(--ink-30);font-size:11px}
+
+.checks{border:1.5px solid var(--ink);background:var(--panel);margin-bottom:12px}
+.ck{display:flex;gap:9px;padding:10px 11px;font-size:12.5px;line-height:1.4}
+.ck+.ck{border-top:1px dotted rgba(32,32,28,.2)}
+.ck .m{font-family:var(--disp);font-weight:800;font-size:13px;color:var(--verm);flex:none;width:14px}
+.ck.ok .m{color:var(--mint)}
+.ck b{font-weight:600;display:block}
+.ck span{display:block;color:var(--ink-60);font-size:11.5px;margin-top:4px;line-height:1.45}
+
+/* toast */
+.toast{position:absolute;left:14px;right:14px;bottom:78px;z-index:30;border:2px solid var(--ink);
+  background:var(--mint);color:var(--panel);padding:11px 13px;font-size:13px;font-weight:600;
+  box-shadow:3px 3px 0 var(--ink);animation:u .2s cubic-bezier(.2,.85,.3,1)}
+.toast.warn{background:var(--acid);color:var(--ink)}
+.toast b{font-family:var(--disp);font-weight:800;text-transform:uppercase;font-size:11px;
+  letter-spacing:.07em;display:block;margin-bottom:3px}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo">SNACK<i>ED</i></div>
+    <div class="hbits" id="hbits"></div>
+  </header>
+  <main id="main"></main>
+  <nav>
+    <button class="tab" data-a="tab" data-v="shelf"><span class="gl">▤</span>Shelf</button>
+    <button class="tab" data-a="tab" data-v="hunt"><span class="gl">◎</span>Hunt</button>
+    <button class="tab add" data-a="open-add"><span class="gl">+</span>Log</button>
+    <button class="tab" data-a="tab" data-v="tally"><span class="gl">▲</span>Tally</button>
+  </nav>
+  <div id="layer"></div>
+</div>
+<script>
+/* ══════════════════════════════════════════════════════════════
+   THE CATALOGUE — Irish shop shelves, roughly as you'd find them.
+   Grouped brand → category → list of products/flavours.
+   ══════════════════════════════════════════════════════════════ */
+const CATS = {
+  crisps:   {label:"Crisps",     bar:"verm"},
+  choc:     {label:"Chocolate",  bar:"plum"},
+  sweets:   {label:"Sweets",     bar:"acid"},
+  ice:      {label:"Ice Cream",  bar:"prus"},
+  biscuits: {label:"Biscuits",   bar:"mint"},
+  other:    {label:"Popcorn & Co", bar:"verm"}
+};
+
+const RAW = [
+/* ── CRISPS ─────────────────────────────────────────────── */
+["Tayto","crisps",["Cheese & Onion","Salt & Vinegar","Smoky Bacon","Prawn Cocktail","Sour Cream & Onion","Cheese & Onion Crinkles","Snax","Waffles","Onion Rings","Burger Bites","Chipsticks","Bacon Fries","Mighty Munch Fiery Steak","Mighty Munch Cheese & Onion"]],
+["King","crisps",["Cheese & Onion","Salt & Vinegar","Smoky Bacon","Ready Salted"]],
+["Hunky Dorys","crisps",["Cheese & Onion","Buffalo","Salt & Vinegar","Sour Cream & Onion","Peppered Steak"]],
+["Keogh's","crisps",["Atlantic Sea Salt & Irish Cider Vinegar","Shamrock & Sour Cream","Dubliner Irish Cheese & Onion","Roast Beef & Irish Stout","Sweet Chilli & Irish Cream Cheese","Irish Atlantic Sea Salt"]],
+["O'Donnells","crisps",["Irish Cheese & Onion","Sea Salt & Irish Cider Vinegar","Ballymaloe Country Relish","Irish Beef & Mustard","Sea Salt & Balsamic Vinegar"]],
+["Meanies","crisps",["Pickled Onion","Cheese & Onion"]],
+["Perri","crisps",["Cheese & Onion","Salt & Vinegar"]],
+["Walkers","crisps",["Ready Salted","Cheese & Onion","Salt & Vinegar","Prawn Cocktail","Smoky Bacon","Roast Chicken","Max Paprika","Sensations Thai Sweet Chilli","Sensations Sea Salt & Balsamic"]],
+["Pringles","crisps",["Original","Sour Cream & Onion","Salt & Vinegar","Texas BBQ","Paprika","Cheesy Cheese"]],
+["Doritos","crisps",["Chilli Heatwave","Cool Original","Tangy Cheese","Flamin' Hot"]],
+["McCoy's","crisps",["Flame Grilled Steak","Salt & Malt Vinegar","Cheddar & Onion"]],
+["Hula Hoops","crisps",["Original","Salt & Vinegar","BBQ Beef","Puft Salt & Vinegar"]],
+["Monster Munch","crisps",["Pickled Onion","Roast Beef","Flamin' Hot"]],
+["Space Raiders","crisps",["Pickled Onion","Beef"]],
+["Walkers Squares","crisps",["Salt & Vinegar","Cheese & Onion"]],
+["French Fries","crisps",["Cheese & Onion","Salt & Vinegar"]],
+["Skips","crisps",["Prawn Cocktail"]],
+["Wotsits","crisps",["Really Cheesy","Flamin' Hot"]],
+["Quavers","crisps",["Cheese"]],
+["Frazzles","crisps",["Crispy Bacon"]],
+["Discos","crisps",["Salt & Vinegar"]],
+["Sunbites","crisps",["Sweet Chilli","Sour Cream & Black Pepper"]],
+["Seabrook","crisps",["Crinkle Cut Sea Salt","Crinkle Cut Cheese & Onion"]],
+["Pom-Bear","crisps",["Original"]],
+
+/* ── CHOCOLATE ──────────────────────────────────────────── */
+["Cadbury","choc",["Dairy Milk","Dairy Milk Whole Nut","Dairy Milk Fruit & Nut","Dairy Milk Caramel","Dairy Milk Oreo","Dairy Milk Daim","Twirl","Twirl Orange","Flake","Crunchie","Wispa","Wispa Gold","Boost","Time Out","Snack Shortcake","Snack Sandwich","Snack Wafer","Golden Crisp","Moro","Turkish Delight","Curly Wurly","Chomp","Fudge","Double Decker","Picnic","Star Bar","Freddo","Buttons","Caramel Nibbles","Roses","Heroes","Mint Crisp","Tiffin","Creme Egg","Mini Eggs","Marvellous Creations"]],
+["Nestlé","choc",["KitKat 4 Finger","KitKat Chunky","Aero Original","Aero Mint","Aero Orange","Yorkie","Munchies","Rolo","Smarties","Toffee Crisp","Lion Bar","Milkybar","After Eight","Quality Street","Drifter","Blue Riband","Breakaway","Animal Bar"]],
+["Mars","choc",["Mars Bar","Snickers","Twix","Bounty","Milky Way","Galaxy","Galaxy Ripple","Galaxy Minstrels","Maltesers","Topic","Revels","Celebrations","M&M's Peanut","M&M's Chocolate"]],
+["Butlers","choc",["Salted Caramel Truffles","Irish Cream Truffles","Milk Chocolate Bar","Hot Chocolate Bombe"]],
+["Lily O'Brien's","choc",["Sticky Toffee","Crispy Caramel","Chocolate Heaven Collection","Salted Caramel"]],
+["Lir Chocolates","choc",["Salted Caramel","Irish Cream Truffles"]],
+["Skelligs Chocolate","choc",["Sea Salt Dark","Milk Chocolate Bar"]],
+["Hazel Mountain","choc",["70% Dark","Burren Sea Salt"]],
+["Bewley's","choc",["Milk Chocolate Bar"]],
+["Chez Emily","choc",["Irish Cream Truffles"]],
+["Kinder","choc",["Bueno","Surprise","Happy Hippo","Chocolate Bars"]],
+["Ferrero","choc",["Rocher","Raffaello"]],
+["Toblerone","choc",["Milk","Dark","White"]],
+["Terry's","choc",["Chocolate Orange","Chocolate Orange Mini Segments"]],
+["Lindt","choc",["Lindor Milk","Lindor Salted Caramel","Excellence 70%"]],
+["Milka","choc",["Alpine Milk","Oreo"]],
+["Reese's","choc",["Peanut Butter Cups","Pieces"]],
+["Green & Black's","choc",["Organic 70%","Sea Salt"]],
+["Ritter Sport","choc",["Alpine Milk","Marzipan","Cornflakes"]],
+
+/* ── SWEETS ─────────────────────────────────────────────── */
+["Haribo","sweets",["Starmix","Tangfastics","Goldbears","Supermix","Giant Strawbs","Fried Eggs"]],
+["Maynards Bassetts","sweets",["Wine Gums","Jelly Babies","Liquorice Allsorts","Sports Mixture","Midget Gems","Murray Mints","Everton Mints"]],
+["Rowntree's","sweets",["Fruit Pastilles","Fruit Gums","Randoms","Jelly Tots","Tooty Frooties"]],
+["Cleeve's","sweets",["Silvermints","Iced Caramels","Toffee","Fudge"]],
+["Emerald","sweets",["Emerald Caramels","Bulls Eyes","Clove Rocks","Apple Drops","Acid Drops"]],
+["Lemon's","sweets",["Pure Sweets","Sherbet Lemons","Bon Bons"]],
+["Trigger","sweets",["Original Chew Bar","Strawberry Chew Bar"]],
+["McCowan's","sweets",["Highland Toffee","Wham Bar","Macaroon Bar","Scots Clan"]],
+["Swizzels","sweets",["Refreshers","Drumstick","Love Hearts","Parma Violets","Fizzers","Double Lollies"]],
+["Barratt","sweets",["Black Jacks","Fruit Salads","Dip Dab","Sherbet Fountain","Flumps","Milk Bottles"]],
+["Skittles","sweets",["Fruits","Sours","Wild Berry"]],
+["Starburst","sweets",["Original","Sours"]],
+["Chewits","sweets",["Strawberry","Blackcurrant"]],
+["Mentos","sweets",["Mint","Fruit"]],
+["Tic Tac","sweets",["Mint","Orange"]],
+["Polo","sweets",["Original Mints","Sugar Free"]],
+["Werther's","sweets",["Original","Soft Caramels"]],
+["M&S","sweets",["Percy Pigs","Colin the Caterpillar Sweets"]],
+["Jelly Beans","sweets",["Jelly Belly Assorted","Cola Bottles","Fizzy Cola Bottles","Gummy Worms"]],
+["Cadbury","sweets",["Eclairs","Chocolate Buttons Jellies"]],
+
+/* ── ICE CREAM ──────────────────────────────────────────── */
+["HB","ice",["Iceberger","Brunch Original","Brunch Choc","Loop the Loop","Fat Frog","Super Split","Wibbly Wobbly Wonder","Twister","Choc Ice","Mini Milk","Ripple","Feast","Freaky Foot","Big Time","Rocky Road","Golly Bar","Vanilla Tub"]],
+["Wall's","ice",["Solero Exotic","Calippo Orange","Cornetto Classico","Cornetto Strawberry","Magnum Classic","Magnum Almond","Magnum White","Viennetta"]],
+["Ben & Jerry's","ice",["Cookie Dough","Phish Food","Chocolate Fudge Brownie","Karamel Sutra","Half Baked"]],
+["Häagen-Dazs","ice",["Belgian Chocolate","Salted Caramel","Strawberries & Cream","Vanilla"]],
+["Murphy's","ice",["Dingle Sea Salt","Irish Brown Bread","Caramelised Brown Bread","Chocolate Whiskey"]],
+["Teddy's","ice",["99 Cone","Whipped Vanilla"]],
+["Silver Pail","ice",["Vanilla","Raspberry Ripple"]],
+["Nobó","ice",["Salted Caramel","Chocolate & Sea Salt"]],
+["Carte D'Or","ice",["Vanilla","Salted Caramel"]],
+["Mr Whippy","ice",["99 Flake","Screwball","Whippy Cone with Raspberry"]],
+
+/* ── BISCUITS ───────────────────────────────────────────── */
+["Jacob's","biscuits",["Kimberley","Chocolate Kimberley","Mikado","Coconut Creams","Fig Rolls","Club Milk","Club Orange","Club Mint","Club Fruit","Cream Crackers","Elite Milk","Afternoon Tea","USA Biscuits"]],
+["Bolands","biscuits",["Marietta","Gypsy Creams","Chocolate Kimberley"]],
+["McVitie's","biscuits",["Digestives","Milk Chocolate Digestives","Dark Chocolate Digestives","Hobnobs","Chocolate Hobnobs","Jaffa Cakes","Penguin","Rich Tea","Ginger Nuts","Digestive Caramels"]],
+["Tunnock's","biscuits",["Teacake","Caramel Wafer","Snowball"]],
+["Fox's","biscuits",["Party Rings","Crunch Creams","Viennese"]],
+["Burton's","biscuits",["Jammie Dodgers","Wagon Wheels","Maryland Cookies"]],
+["Mr Kipling","biscuits",["French Fancies","Bakewell Slices","Angel Slices","Cherry Bakewell","Viennese Whirls"]],
+["Oreo","biscuits",["Original","Double Stuf","Golden"]],
+["Classics","biscuits",["Custard Creams","Bourbon Creams","Nice","Pink Wafers","Garibaldi"]],
+
+/* ── POPCORN & CO ───────────────────────────────────────── */
+["Manhattan","other",["Popcorn Sweet","Popcorn Sweet & Salted","Popcorn Toffee"]],
+["Butterkist","other",["Toffee Popcorn","Sweet & Salted Popcorn"]],
+["Propercorn","other",["Sweet & Salty","Lightly Sea Salted"]],
+["Nobby's","other",["Dry Roasted Peanuts","Salted Peanuts"]],
+["KP","other",["Salted Peanuts","Honey Roast Peanuts","Choc Dips"]],
+["Jacob's","other",["Mini Cheddars","Cheeselets","Twiglets"]],
+["Golden Wonder","other",["Wheat Crunchies Bacon","Wheat Crunchies Worcester Sauce"]],
+["Mr Porky","other",["Pork Scratchings","Crispy Strips"]],
+["Tayto","other",["Bacon Fries Snack Pack","Cheese & Onion Popcorn"]],
+/* ── expansion: fuller ranges, supermarket own-brands, the ones people
+      actually reach for. Prawn cocktail everywhere it belongs. ───────── */
+["Tayto","crisps",["Ready Salted","Pickled Onion","Bacon Rashers","Snaps","Bikers","Cheese & Onion Popcorn Bag","Meanies Pickled Onion"]],
+["Hunky Dorys","crisps",["Prawn Cocktail","Ready Salted","Smokey Bacon","Original","Buffalo Crinkles","Cheese & Onion Ridge Cut"]],
+["King","crisps",["Prawn Cocktail","Beef & Onion","Cheese & Onion Crinkles"]],
+["Keogh's","crisps",["Ballymaloe Country Relish","Slowly Roasted Beef & Onion","Chorizo & Rosemary","Herb & Garlic","Lightly Salted"]],
+["O'Donnells","crisps",["Sour Cream & Onion","Buffalo Wings","Salt & Vinegar","Cheese & Chive"]],
+["Walkers","crisps",["Worcester Sauce","Pickled Onion","Beef & Onion","Max Flame Grilled Steak","Max Cheese & Onion","Baked Ready Salted"]],
+["Pringles","crisps",["Prawn Cocktail","Smoky Bacon","Sweet Chilli","BBQ","Salt & Vinegar Rice Crisps"]],
+["Doritos","crisps",["Nacho Cheese","Lightly Salted","Sweet Chilli Heat","Chilli Heatwave Bites"]],
+["McCoy's","crisps",["Thai Sweet Chicken","Sizzling BBQ Beef","Salt & Vinegar Ridge Cut"]],
+["Hula Hoops","crisps",["Cheese & Onion","Beefy","Big Hoops Salt & Vinegar","Puft Cheese"]],
+["Nik Naks","crisps",["Nice 'n' Spicy","Rib 'n' Saucy","Scampi 'n' Lemon"]],
+["Smiths","crisps",["Scampi Fries","Bacon Fries","Cheese Moments"]],
+["Golden Wonder","crisps",["Ready Salted","Cheese & Onion","Salt & Vinegar","Transform-a-Snack Saucy BBQ","Roysters Flame Grilled Steak"]],
+["Kettle Chips","crisps",["Sea Salt & Balsamic Vinegar","Mature Cheddar & Red Onion","Lightly Salted","Sweet Chilli & Sour Cream"]],
+["Tyrrells","crisps",["Lightly Sea Salted","Sweet Chilli & Red Pepper","Mature Cheddar & Chives"]],
+["Burts","crisps",["Sea Salt","Sea Salt & Malt Vinegar","Mature Cheddar & Onion"]],
+["Snackrite","crisps",["Cheese & Onion","Salt & Vinegar","Prawn Cocktail","Ready Salted"]],
+["Snaktastic","crisps",["Cheese & Onion","Salt & Vinegar","Prawn Cocktail"]],
+["Tesco","crisps",["Cheese & Onion","Salt & Vinegar","Prawn Cocktail","Ready Salted"]],
+["Dunnes Stores","crisps",["Cheese & Onion","Salt & Vinegar","Prawn Cocktail"]],
+["SuperValu","crisps",["Signature Tastes Sea Salt & Cider Vinegar","Cheese & Onion","Prawn Cocktail"]],
+["Squares","crisps",["Prawn Cocktail","Ready Salted"]],
+["Monster Munch","crisps",["Sour Cream & Onion"]],
+["Wotsits","crisps",["Giants Really Cheesy","Crunchy Cheese"]],
+["Skips","crisps",["Salt & Vinegar"]],
+
+["Cadbury","choc",["Bournville","Caramilk","Darkmilk","Dairy Milk Bubbly","Dairy Milk Big Taste","Dairy Milk Little Bars","Wispa Bites","Twirl Bites","Fingers","Mini Rolls","Brunch Bar","Boost Duo","Dairy Milk Orange","Dairy Milk Mint","Snowballs","Flake 99","Dream","Crunchie Rocks"]],
+["Nestlé","choc",["KitKat Dark","KitKat White","KitKat Orange","Aero Bubbles","Aero Melts","Caramac","Yorkie Raisin & Biscuit","Milkybar Buttons","Rolo Giant","Smarties Orange"]],
+["Mars","choc",["Twix White","Twix Salted Caramel","Bounty Dark","Snickers Peanut Butter","Galaxy Caramel","Galaxy Cookie Crumble","Maltesers Teasers","Milky Way Magic Stars","Mars Duo","M&M's Crispy"]],
+["Fry's","choc",["Chocolate Cream","Turkish Delight","Peppermint Cream","Orange Cream"]],
+["Butlers","choc",["Dark Chocolate Bar","Chocolate Honeycomb","Milk Chocolate Hazelnut"]],
+["Lily O'Brien's","choc",["Salted Caramel Thins","Chocolate Truffle Collection","Mallow Madness"]],
+["Kinder","choc",["Bueno White","Maxi","Country"]],
+["Lindt","choc",["Lindor White","Lindor Dark","Excellence Sea Salt"]],
+["Guylian","choc",["Sea Shells","Temptations"]],
+["After Eight","choc",["Mint Thins","Orange Thins"]],
+["Maltesers","choc",["Truffles","Buttons"]],
+
+["Haribo","sweets",["Balla Stixx Strawberry","Sour Streamers","Twin Snakes","Cherries","Rhubarb & Custard","Jelly Rings"]],
+["Rowntree's","sweets",["Fruit Pastilles Sours","Jelly Tots Sour","Pick & Mix","Fruit Gums Rolls"]],
+["Maynards Bassetts","sweets",["Mint Imperials","Liquorice Comfits","Winegums Sours","Dolly Mixture"]],
+["Swizzels","sweets",["Refreshers Chews","Drumstick Squashies","Rainbow Drops","Parma Violets Giant"]],
+["Millions","sweets",["Strawberry","Bubblegum","Cola","Vimto"]],
+["Chewits","sweets",["Xtreme Sour Apple","Fruit Salad","Cola"]],
+["Cleeve's","sweets",["Butter Nougat","Milk Chocolate Caramels","Mint Creams"]],
+["Emerald","sweets",["Bon Bons","Pear Drops","Rhubarb & Custard","Cough Candy","Chocolate Limes"]],
+["Trigger","sweets",["Cola Chew Bar","Vanilla Chew Bar"]],
+["Jelly Beans","sweets",["Fizzy Fish","Jelly Snakes","Sour Worms","Percy Pig Mix"]],
+["Skittles","sweets",["Crazy Sours","Giants","Tropical"]],
+["Starburst","sweets",["Fruit Chews","Very Berry"]],
+["Mentos","sweets",["Rainbow","Chewy Mints"]],
+["Tic Tac","sweets",["Fresh Mint","Cherry Cola","Strawberry Mix"]],
+["Wrigley's","sweets",["Extra Peppermint","Airwaves Menthol","Hubba Bubba"]],
+
+["HB","ice",["Brunch Peanut","Choc Ice Mint","Twister Mini","Wibbly Wobbly Wonder Blue","Iceberger Original","Super Split Orange","Vanilla Cone","Strawberry Split"]],
+["Wall's","ice",["Magnum Double Caramel","Magnum Mint","Magnum Ruby","Solero Red Berry","Calippo Lemon-Lime","Cornetto Mint","Twister Orange","Feast Chocolate"]],
+["Ben & Jerry's","ice",["Peanut Butter Cup","Netflix & Chilll'd","Cookie Dough Twist","Strawberry Cheesecake"]],
+["Häagen-Dazs","ice",["Cookies & Cream","Pralines & Cream","Mango & Raspberry"]],
+["Murphy's","ice",["Honeycomb","Salted Caramel","Baileys","Rhubarb Crumble"]],
+["Nobó","ice",["Vanilla & Vodka","Coconut & Chocolate"]],
+["Mr Whippy","ice",["99 with Raspberry Sauce","Double Flake 99","Sprinkle Cone"]],
+["Silver Pail","ice",["Honeycomb","Mint Choc Chip","Strawberry"]],
+
+["Jacob's","biscuits",["Choc Chip Cookies","Fig Roll Bars","Club Toffee","Kimberley Mini","Cream Crackers Wholemeal","Polo Biscuits"]],
+["Bolands","biscuits",["Coconut Creams","Fig Rolls","Digestives","Lemon Puffs"]],
+["McVitie's","biscuits",["Digestive Thins","Hobnobs Oaty Bites","Jaffa Cakes Orange & Lemon","Toffypops","Viscount Mint","Gold Bars","Rich Tea Fingers"]],
+["Tunnock's","biscuits",["Dark Caramel Wafer","Milk Chocolate Teacake Mini"]],
+["Fox's","biscuits",["Chocolatey Rounds","Golden Crunch Creams","Jam & Cream Sandwich"]],
+["Burton's","biscuits",["Jammie Dodgers Mini","Wagon Wheels Jammie","Chocolate Chip Cookies"]],
+["Mr Kipling","biscuits",["Battenberg","Lemon Slices","Country Slices","Mince Pies"]],
+["Oreo","biscuits",["Mint","Peanut Butter","Thins"]],
+["Classics","biscuits",["Malted Milk","Shortbread Fingers","Ginger Snaps","Digestive Caramel Slice"]],
+
+["Manhattan","other",["Popcorn Salted","Popcorn Cinema Style"]],
+["Butterkist","other",["Salted Popcorn","Chocolate Popcorn"]],
+["Propercorn","other",["Fiery Worcester Sauce","Smooth Peanut & Almond"]],
+["Nobby's","other",["Nuts Bacon Rashers","Cheese Puffs"]],
+["KP","other",["Dry Roasted Peanuts","Original Peanuts","Skips Multipack"]],
+["Jacob's","other",["Mini Cheddars Red Leicester","Ritz Crackers","Cheeselets Original"]],
+["Whitworths","other",["Mixed Nuts","Raisins & Peanuts"]],
+["Planters","other",["Cashews","Salted Peanuts"]],
+["Mr Porky","other",["Pork Crackles","Scratchings Original"]]
+
+];
+
+/* flatten into a searchable list */
+const CATALOGUE = [];
+RAW.forEach(([brand, cat, items]) => items.forEach(name => {
+  CATALOGUE.push({
+    brand, cat, name,
+    key: (brand + "|" + name).toLowerCase(),
+    hay: (brand + " " + name + " " + CATS[cat].label).toLowerCase()
+  });
+}));
+
+/* every brand and every product name we know, for type-ahead when
+   someone adds a snack of their own */
+const BRANDS = [...new Set(CATALOGUE.map(x => x.brand))].sort((a, b) => a.localeCompare(b));
+const PRODUCTS = [...new Set(CATALOGUE.map(x => x.name))].sort((a, b) => a.localeCompare(b));
+const BRAND_CAT = {};
+CATALOGUE.forEach(x => { (BRAND_CAT[x.brand] = BRAND_CAT[x.brand] || {})[x.cat] =
+  ((BRAND_CAT[x.brand] || {})[x.cat] || 0) + 1; });
+/* the category a brand is most associated with */
+function brandCat(b) {
+  const m = BRAND_CAT[b];
+  if (!m) return null;
+  return Object.keys(m).sort((x, y) => m[y] - m[x])[0];
+}
+
+/* ══════════════════════════════════════════════════════════════
+   STATE + STORAGE
+   ══════════════════════════════════════════════════════════════ */
+const KEY = "snackedEntries";
+const OLD_KEY = "crispsTrackerEntries";
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const newId = () => crypto.randomUUID?.() ||
+  "id-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+const today = () => {
+  const d = new Date();
+  return new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+};
+const keyOf = e => (e.brand + "|" + e.name).toLowerCase();
+
+const clean = a => a.filter(e => e && e.brand && e.name && /^\d{4}-\d{2}-\d{2}$/.test(e.date))
+  .map(e => ({
+    id: e.id || newId(),
+    brand: String(e.brand).trim(),
+    name: String(e.name).trim(),
+    cat: CATS[e.cat] ? e.cat : "other",
+    member: e.member ? String(e.member) : "",
+    rating: Math.min(10, Math.max(1, Math.round(Number(e.rating) || 1))),
+    date: e.date,
+    ts: Number(e.ts) || 0,        // ordering for repeats logged on the same day
+    note: e.note ? String(e.note).trim().slice(0, 200) : ""
+  }));
+
+/* one-time lift of anything logged in the old crisps-only tracker */
+function migrate() {
+  try {
+    const old = JSON.parse(localStorage.getItem(OLD_KEY) || "[]");
+    if (!Array.isArray(old) || !old.length) return [];
+    return clean(old.map(e => ({...e, name: e.type, cat: "crisps"})));
+  } catch { return []; }
+}
+
+function load() {
+  let saved = [];
+  try {
+    const x = JSON.parse(localStorage.getItem(KEY) || "[]");
+    saved = clean(Array.isArray(x) ? x : []);
+  } catch { saved = []; }
+  if (!saved.length && !localStorage.getItem(KEY)) {
+    const lifted = migrate();
+    if (lifted.length) { saved = lifted; localStorage.setItem(KEY, JSON.stringify(saved)); }
+  }
+  return saved;
+}
+
+let entries = load();
+const save = () => localStorage.setItem(KEY, JSON.stringify(entries));
+
+let view = "shelf";
+let sheet = null;                     // {mode, ...}
+let shelfQ = "", shelfCat = "all", shelfSort = "recent";
+let huntCat = "all", dare = null;
+let lastList = [];                    // index target for tappable result rows
+
+/* ══════════════════════════════════════════════════════════════
+   DERIVED DATA
+   ══════════════════════════════════════════════════════════════ */
+function shelf(src) {
+  const m = new Map();
+  (src || entries).forEach(e => {
+    const k = keyOf(e);
+    if (!m.has(k)) m.set(k, {key: k, brand: e.brand, name: e.name, cat: e.cat, logs: []});
+    m.get(k).logs.push(e);
+  });
+  return [...m.values()].map(s => {
+    s.logs.sort((a, b) => b.date.localeCompare(a.date) || b.ts - a.ts);
+    s.count = s.logs.length;
+    s.last = s.logs[0].date;
+    s.rating = s.logs[0].rating;                       // most recent verdict stands
+    s.firstRating = s.logs[s.count - 1].rating;
+    s.drift = s.rating - s.firstRating;
+    s.avg = s.logs.reduce((t, l) => t + l.rating, 0) / s.count;
+    return s;
+  });
+}
+
+const tried = () => new Set(entries.map(keyOf));
+
+function streak() {
+  if (!entries.length) return 0;
+  const days = new Set(entries.map(e => e.date));
+  const d = new Date(today() + "T00:00:00");
+  if (!days.has(today())) d.setDate(d.getDate() - 1);      // yesterday still counts
+  let n = 0;
+  for (;;) {
+    const s = new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+    if (!days.has(s)) break;
+    n++; d.setDate(d.getDate() - 1);
+  }
+  return n;
+}
+
+function catStats() {
+  const t = tried();
+  return Object.keys(CATS).map(c => {
+    const all = CATALOGUE.filter(x => x.cat === c);
+    const done = all.filter(x => t.has(x.key)).length;
+    return {
+      cat: c, label: CATS[c].label, bar: CATS[c].bar,
+      total: all.length, done,
+      pct: all.length ? Math.round(done / all.length * 100) : 0,
+      logs: entries.filter(e => e.cat === c).length
+    };
+  });
+}
+
+const VERDICTS = [
+  [1, "Bin it. A genuine mistake."], [3, "Wouldn't reach for it again."],
+  [5, "Grand. Nothing more."], [7, "A solid, reliable pick."],
+  [9, "Top drawer stuff."], [10, "Elite. One for the hall of fame."]
+];
+const verdict = r => VERDICTS.find(v => r <= v[0])[1];
+const band = r => r >= 8 ? "hi" : r >= 5 ? "mid" : "lo";
+
+function marks() {
+  const s = shelf(), t = tried(), cats = new Set(entries.map(e => e.cat));
+  const byBrand = b => entries.filter(e => e.brand === b).length;
+  const byCat = c => entries.filter(e => e.cat === c).length;
+  return [
+    ["Tayto Loyalist", byBrand("Tayto") >= 5],
+    ["Sweet Tooth", byCat("sweets") >= 10],
+    ["Cold Blooded", byCat("ice") >= 5],
+    ["Perfect 10", entries.some(e => e.rating === 10)],
+    ["Harsh Critic", entries.some(e => e.rating <= 2)],
+    ["Repeat Offender", s.some(x => x.count >= 5)],
+    ["Broad Church", cats.size >= 6],
+    ["Shelf Stacker", s.length >= 25],
+    ["Century", entries.length >= 100]
+  ];
+}
+
+const MILESTONES = [10, 25, 50, 100, 150, 250];
+const fmtDate = d => new Date(d + "T00:00:00")
+  .toLocaleDateString("en-IE", {day: "numeric", month: "short"});
+const fmtLong = d => new Date(d + "T00:00:00")
+  .toLocaleDateString("en-IE", {day: "numeric", month: "long", year: "numeric"});
+
+/* ══════════════════════════════════════════════════════════════
+   THE HOUSEHOLD — members, sync, and the arguments between them
+   ══════════════════════════════════════════════════════════════ */
+const H_KEY = "snackedHouse", M_KEY = "snackedMembers",
+      P_KEY = "snackedPending", D_KEY = "snackedDead";
+
+const COLOURS = {
+  verm: "#E8452C", prus: "#17375E", mint: "#5E9E7E",
+  plum: "#7B4B77", acid: "#D9BE33", ink: "#20201C"
+};
+const COLOUR_KEYS = Object.keys(COLOURS);
+
+const readJSON = (k, fb) => { try { return JSON.parse(localStorage.getItem(k)) ?? fb; } catch { return fb; } };
+
+let cfg = readJSON(H_KEY, null);                 // {url, key, house, me:{id,name,colour}}
+let members = readJSON(M_KEY, []);               // [{id, name, colour, ts}]
+let pending = new Set(readJSON(P_KEY, []));      // log ids awaiting push
+let dead = new Set(readJSON(D_KEY, []));         // tombstones awaiting push
+let viewMember = "all";                          // whose shelf you're looking at
+let sync = {status: "off", msg: "", at: 0};
+let syncTimer = null;
+
+const inHouse = () => !!(cfg && cfg.url && cfg.key && cfg.house && cfg.me);
+const me = () => (cfg && cfg.me) || null;
+const savePending = () => {
+  localStorage.setItem(P_KEY, JSON.stringify([...pending]));
+  localStorage.setItem(D_KEY, JSON.stringify([...dead]));
+};
+const saveMembers = () => localStorage.setItem(M_KEY, JSON.stringify(members));
+const saveCfg = () => cfg ? localStorage.setItem(H_KEY, JSON.stringify(cfg))
+                          : localStorage.removeItem(H_KEY);
+
+function memberOf(id) {
+  return (sheet && sheet.people || []).find(m => m.id === id) ||
+    members.find(m => m.id === id) ||
+    (me() && me().id === id ? me() : {id, name: "Someone", colour: "ink"});
+}
+const mug = (id, size) => {
+  const m = memberOf(id);
+  return `<span class="mug" style="background:${COLOURS[m.colour] || COLOURS.ink}${
+    size ? `;width:${size}px;height:${size}px;font-size:${Math.round(size * .42)}px` : ""}"
+    title="${esc(m.name)}">${esc(m.name.slice(0, 1).toUpperCase())}</span>`;
+};
+
+/* ── house codes: three snacks and a number, easy to say down the phone ── */
+function makeCode() {
+  const words = ["TAYTO", "MIKADO", "BRUNCH", "FLAKE", "CLUB", "KIMBERLEY", "MEANIES",
+    "ICEBERGER", "CRUNCHIE", "SILVERMINT", "HOBNOB", "WISPA", "FATFROG", "TWIRL",
+    "CARAMEL", "MONSTER", "PICNIC", "SNACK", "ROLO", "MOROBAR"];
+  const pick = () => words[Math.floor(Math.random() * words.length)];
+  let a = pick(), b = pick(), c = pick();
+  while (b === a) b = pick();
+  while (c === a || c === b) c = pick();
+  return `${a}-${b}-${c}-${Math.floor(Math.random() * 900 + 100)}`;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SUPABASE WIRE
+   ══════════════════════════════════════════════════════════════ */
+function headers(extra) {
+  const h = {"apikey": cfg.key, "Content-Type": "application/json"};
+  // Legacy anon keys are JWTs and are happy in either header. The newer
+  // sb_publishable_ keys are not JWTs and are rejected as a bearer token,
+  // so they travel on apikey alone. Custom headers are not an option:
+  // Supabase's gateway only allows authorization, x-client-info, apikey
+  // and content-type through CORS preflight.
+  if (/^ey/.test(cfg.key)) h["Authorization"] = "Bearer " + cfg.key;
+  return Object.assign(h, extra || {});
+}
+const rest = path => cfg.url.replace(/\/+$/, "") + "/rest/v1/" + path;
+
+const toRow = e => ({
+  id: e.id, house: cfg.house, member: e.member || me().id,
+  member_name: memberOf(e.member || me().id).name,
+  brand: e.brand, name: e.name, cat: e.cat, rating: e.rating,
+  date: e.date, ts: e.ts || 0, note: e.note || "", deleted: false
+});
+const fromRow = r => ({
+  id: r.id, member: r.member, brand: r.brand, name: r.name, cat: r.cat,
+  rating: r.rating, date: r.date, ts: Number(r.ts) || 0, note: r.note || ""
+});
+
+async function push() {
+  const sending = entries.filter(e => pending.has(e.id));
+  const sentIds = sending.map(e => e.id);
+  const deadIds = [...dead];
+  const rows = sending.map(toRow);
+  deadIds.forEach(id => rows.push({
+    id, house: cfg.house, member: me().id, member_name: me().name,
+    brand: "-", name: "-", cat: "other", rating: 1,
+    date: today(), ts: Date.now(), note: "", deleted: true
+  }));
+  if (rows.length) {
+    const r = await fetch(rest("snack_logs?on_conflict=id"), {
+      method: "POST",
+      headers: headers({"Prefer": "resolution=merge-duplicates,return=minimal"}),
+      body: JSON.stringify(rows)
+    });
+    if (!r.ok) throw new Error("Push failed (" + r.status + "). " + (await r.text()).slice(0, 120));
+    // Clear only what we actually sent — anything logged while this request was
+    // in flight stays queued for the next round.
+    sentIds.forEach(id => pending.delete(id));
+    deadIds.forEach(id => dead.delete(id));
+    savePending();
+  }
+  const m = me();
+  const mr = await fetch(rest("snack_members?on_conflict=id"), {
+    method: "POST",
+    headers: headers({"Prefer": "resolution=merge-duplicates,return=minimal"}),
+    body: JSON.stringify([{id: m.id, house: cfg.house, name: m.name, colour: m.colour, ts: Date.now()}])
+  });
+  if (!mr.ok) throw new Error("Member sync failed (" + mr.status + ").");
+}
+
+async function pull() {
+  const q = "?house=eq." + encodeURIComponent(cfg.house) + "&select=*&limit=5000";
+  const [lr, mr] = await Promise.all([
+    fetch(rest("snack_logs" + q), {headers: headers()}),
+    fetch(rest("snack_members" + q), {headers: headers()})
+  ]);
+  if (!lr.ok) throw new Error("Pull failed (" + lr.status + "). " + (await lr.text()).slice(0, 120));
+  const rows = await lr.json();
+
+  const byId = new Map(entries.map(e => [e.id, e]));
+  rows.forEach(r => {
+    if (r.deleted) { byId.delete(r.id); dead.delete(r.id); return; }
+    if (pending.has(r.id)) return;               // local edit not yet pushed wins
+    byId.set(r.id, fromRow(r));
+  });
+  entries = clean([...byId.values()]);
+  save();
+
+  if (mr.ok) {
+    const rm = await mr.json();
+    const map = new Map(members.map(m => [m.id, m]));
+    rm.forEach(m => map.set(m.id, {id: m.id, name: m.name, colour: m.colour, ts: Number(m.ts) || 0}));
+    members = [...map.values()];
+    saveMembers();
+  }
+}
+
+async function doSync(quiet) {
+  if (!inHouse() || sync.status === "syncing") return;
+  sync = {status: "syncing", msg: "", at: sync.at};
+  if (!quiet) render();
+  try {
+    await push();
+    await pull();
+    sync = {status: "idle", msg: "", at: Date.now()};
+    render();
+  } catch (err) {
+    sync = {status: "error", msg: String(err.message || err), at: sync.at};
+    render();
+    if (!quiet) toast("Sync trouble", sync.msg.slice(0, 90), true);
+  }
+}
+
+function scheduleSync() {
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => doSync(true), 1200);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   HOUSEHOLD READINGS
+   ══════════════════════════════════════════════════════════════ */
+/* newest rating per member for one shelf entry */
+function perMember(s) {
+  const m = new Map();
+  s.logs.forEach(l => { const k = l.member || "solo"; if (!m.has(k)) m.set(k, l); });
+  return [...m.values()];
+}
+function houseScore(s) {
+  const v = perMember(s);
+  return v.length > 1 ? v.reduce((t, l) => t + l.rating, 0) / v.length : null;
+}
+/* who brought this snack into the house, and when */
+function firstLogger(s) {
+  return s.logs[s.logs.length - 1];
+}
+/* every member's current verdict on one snack, best first */
+function houseTable(s) {
+  return perMember(s).sort((a, b) => b.rating - a.rating);
+}
+function splits() {
+  const out = [];
+  shelf().forEach(s => {
+    const v = perMember(s);
+    if (v.length < 2) return;
+    const hi = v.reduce((a, b) => b.rating > a.rating ? b : a);
+    const lo = v.reduce((a, b) => b.rating < a.rating ? b : a);
+    if (hi.rating - lo.rating >= 3) out.push({s, hi, lo, gap: hi.rating - lo.rating});
+  });
+  return out.sort((a, b) => b.gap - a.gap).slice(0, 5);
+}
+function leaderboard() {
+  const t = new Map();
+  entries.forEach(e => {
+    const k = e.member || (me() ? me().id : "solo");
+    if (!t.has(k)) t.set(k, {id: k, logs: 0, sum: 0, snacks: new Set()});
+    const r = t.get(k); r.logs++; r.sum += e.rating; r.snacks.add(keyOf(e));
+  });
+  return [...t.values()].map(r => ({...r, avg: r.sum / r.logs, unique: r.snacks.size}))
+    .sort((a, b) => b.logs - a.logs);
+}
+/* who agrees with you, and who never does */
+function kinship() {
+  if (!me()) return [];
+  const mine = new Map();
+  shelf().forEach(s => perMember(s).forEach(l => {
+    if (l.member === me().id) mine.set(s.key, l.rating);
+  }));
+  const others = new Map();
+  shelf().forEach(s => perMember(s).forEach(l => {
+    if (!l.member || l.member === me().id || !mine.has(s.key)) return;
+    if (!others.has(l.member)) others.set(l.member, {id: l.member, n: 0, diff: 0});
+    const o = others.get(l.member);
+    o.n++; o.diff += Math.abs(l.rating - mine.get(s.key));
+  }));
+  return [...others.values()].filter(o => o.n >= 3)
+    .map(o => ({...o, gap: o.diff / o.n})).sort((a, b) => a.gap - b.gap);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SETUP CHECK — probes the project and says what's wrong in English
+   ══════════════════════════════════════════════════════════════ */
+async function probe(url, key, path, opts) {
+  const h = {"apikey": key, "Content-Type": "application/json"};
+  if (/^ey/.test(key)) h["Authorization"] = "Bearer " + key;
+  const r = await fetch(url.replace(/\/+$/, "") + "/rest/v1/" + path,
+    Object.assign({headers: Object.assign(h, (opts || {}).extra || {})}, opts || {}));
+  let body = "";
+  try { body = await r.text(); } catch {}
+  return {status: r.status, ok: r.ok, body};
+}
+
+async function checkSetup(url, key) {
+  const out = [];
+  const add = (ok, what, fix) => out.push({ok, what, fix});
+
+  if (!/^https?:\/\/[^\s\/]+\/?$/i.test(url)) {
+    add(false, "Project URL looks wrong",
+      "It should look like https://abcdefgh.supabase.co and nothing after it. " +
+      "Find it in Supabase under Settings, then Data API.");
+    return out;
+  }
+  if (/supabase\.(co|in)$/i.test(url.replace(/\/+$/, ""))) add(true, "Project URL looks right");
+  else add(true, "Project URL accepted",
+    "It isn't a supabase.co address. Fine if that's deliberate, but if you copied this " +
+    "from your browser's address bar it's the wrong one — you want Settings, then Data API.");
+
+  let r;
+  try { r = await probe(url, key, "snack_logs?select=id&limit=1"); }
+  catch {
+    add(false, "Couldn't reach the project",
+      "Check the URL is exactly right and that you're online. If it only just finished " +
+      "setting up, give it another minute and try again.");
+    return out;
+  }
+
+  if (r.status === 401 || r.status === 403) {
+    add(false, "The project rejected the key",
+      /^ey/.test(key)
+        ? "That looks like a legacy anon key. Make sure you copied the anon key and not the " +
+          "service_role one, and that it's from this project."
+        : "Copy the publishable key from Settings, then API Keys. A secret key won't work " +
+          "from a phone, on purpose.");
+    return out;
+  }
+  add(true, "The key works");
+
+  if (r.status === 404 || /PGRST205|does not exist/i.test(r.body)) {
+    add(false, "The tables aren't there yet",
+      "Open the SQL Editor in Supabase, paste the whole of supabase-setup.sql, and press Run. " +
+      "Then come back and test again.");
+    return out;
+  }
+  if (!r.ok) { add(false, "Unexpected reply (" + r.status + ")", r.body.slice(0, 140)); return out; }
+  add(true, "Found the snack table");
+
+  const m = await probe(url, key, "snack_members?select=id&limit=1");
+  if (!m.ok) {
+    add(false, "The members table is missing",
+      "Run supabase-setup.sql again — it looks like only part of it went through.");
+    return out;
+  }
+  add(true, "Found the members table");
+
+  const id = "setup-check-" + Math.random().toString(36).slice(2);
+  const w = await probe(url, key, "snack_logs", {
+    method: "POST",
+    body: JSON.stringify([{id, house: "SETUP-CHECK", member: "check", member_name: "check",
+      brand: "-", name: "-", cat: "other", rating: 1, date: today(), ts: Date.now(),
+      note: "", deleted: false}]),
+    extra: {"Prefer": "return=minimal"}
+  });
+  if (!w.ok) {
+    add(false, "It can read but not write",
+      "The permissions didn't take. Re-run supabase-setup.sql in the SQL Editor — the grant " +
+      "and policy lines near the bottom are the ones that matter.");
+    return out;
+  }
+  add(true, "Writing works");
+  await probe(url, key, "snack_logs?id=eq." + id, {method: "DELETE"}).catch(() => {});
+  add(true, "Everything's ready");
+  return out;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   THE HOUSE SHEET
+   ══════════════════════════════════════════════════════════════ */
+function shareLink() {
+  const payload = btoa(JSON.stringify({u: cfg.url, k: cfg.key, h: cfg.house}));
+  return location.origin + location.pathname + "#join=" + payload;
+}
+
+function sheetHouse() {
+  if (!inHouse()) {
+    const draft = sheet.draft || {};
+    return `<h3>Start a household</h3>
+      <p class="lede">One free Supabase project holds the whole house. Paste its details once,
+        then send everyone else a link — they won't have to type any of this.</p>
+      <div class="lbl">Your name</div>
+      <input class="fld" id="hName" type="text" placeholder="e.g. Aoife" autocapitalize="words"
+        value="${esc(draft.name || "")}">
+      <div class="lbl">Your colour</div>
+      <div class="swatches">${COLOUR_KEYS.map(c =>
+        `<button class="sw${(draft.colour || "verm") === c ? " on" : ""}" data-a="colour" data-v="${c}"
+          style="background:${COLOURS[c]}"></button>`).join("")}</div>
+      <div class="lbl">Supabase project URL</div>
+      <input class="fld" id="hUrl" type="url" placeholder="https://abcdef.supabase.co"
+        autocapitalize="off" autocorrect="off" value="${esc(draft.url || "")}">
+      <div class="lbl">Anon public key</div>
+      <input class="fld" id="hKey" type="text" placeholder="eyJhbGciOi…"
+        autocapitalize="off" autocorrect="off" value="${esc(draft.key || "")}">
+      <div class="lbl">House code</div>
+      <input class="fld" id="hCode" type="text" autocapitalize="characters"
+        value="${esc(draft.house || makeCode())}">
+      ${peopleBlock()}
+      ${checkBlock()}
+      <button class="blk wide" data-a="check"${sheet.checking ? " disabled" : ""}>${
+        sheet.checking ? "Checking…" : "Test these details"}</button>
+      <div style="height:9px"></div>
+      <button class="blk go wide" data-a="house-save">Open the house</button>
+      <button class="shut" data-a="close">Not now</button>`;
+  }
+
+  const board = leaderboard();
+  return `<h3>The House</h3>
+    <p class="lede">Code <b>${esc(cfg.house)}</b> — ${members.length || 1}
+      ${members.length === 1 ? "member" : "members"}.</p>
+    <div class="mugbar">${(members.length ? members : [me()]).map(m =>
+      `<div class="mugc">${mug(m.id, 38)}<b>${esc(m.name)}</b>
+        <span>${(board.find(x => x.id === m.id) || {logs: 0}).logs} logs</span></div>`).join("")}</div>
+    <div class="lbl">Invite the rest of them</div>
+    <input class="fld" id="hLink" type="text" readonly value="${esc(shareLink())}">
+    <button class="blk wide" data-a="copy-link">Copy invite link</button>
+    <div class="lbl" style="margin-top:14px">You</div>
+    <input class="fld" id="hName" type="text" value="${esc(me().name)}" autocapitalize="words">
+    <div class="swatches">${COLOUR_KEYS.map(c =>
+      `<button class="sw${me().colour === c ? " on" : ""}" data-a="colour" data-v="${c}"
+        style="background:${COLOURS[c]}"></button>`).join("")}</div>
+    <button class="blk wide" data-a="house-rename">Save</button>
+    <div class="acts" style="margin-top:12px">
+      <button class="blk" data-a="sync">Sync now</button>
+      <button class="blk soft" data-a="leave">Leave house</button>
+    </div>
+    ${sync.status === "error" ? `<div class="verdict lo" style="margin-top:12px">${esc(sync.msg)}</div>` : ""}
+    <button class="shut" data-a="close">Close</button>`;
+}
+
+function checkBlock() {
+  if (!sheet.check) return "";
+  return `<div class="checks">${sheet.check.map(c =>
+    `<div class="ck${c.ok ? " ok" : ""}"><span class="m">${c.ok ? "✓" : "✕"}</span>
+      <div><b>${esc(c.what)}</b>${c.fix ? `<span>${esc(c.fix)}</span>` : ""}</div></div>`).join("")}</div>`;
+}
+
+/* Who's already in this house? Asked before joining, so a new phone can
+   reclaim an existing person rather than becoming a stranger. */
+async function fetchPeople(url, key, house) {
+  const hd = {"apikey": key, "Content-Type": "application/json"};
+  if (/^ey/.test(key)) hd["Authorization"] = "Bearer " + key;
+  const r = await fetch(url.replace(/\/+$/, "") + "/rest/v1/snack_members?house=eq." +
+    encodeURIComponent(house) + "&select=*", {headers: hd});
+  if (!r.ok) throw new Error("Couldn't read the household (" + r.status + ").");
+  return (await r.json()).map(m => ({id: m.id, name: m.name, colour: m.colour}));
+}
+
+function peopleBlock() {
+  if (!sheet.people) return "";
+  if (!sheet.people.length) return `<div class="verdict" style="font-style:normal">
+    Nobody's in this house yet — you'll be the first. Pick a name and colour below.</div>`;
+  const d = sheet.draft || {};
+  return `<div class="lbl">Is one of these you?</div>
+    <div class="peoples">${sheet.people.map((p, i) =>
+      `<button class="peep${d.claimId === p.id ? " on" : ""}" data-a="claim" data-v="${i}">
+        ${mug(p.id, 30)}<b>${esc(p.name)}</b></button>`).join("")}
+      <button class="peep${d.claimId ? "" : " on"}" data-a="claim" data-v="new">
+        <span class="newmark">+</span><b>Someone new</b></button></div>
+    <div class="hint" style="text-align:left;margin:-4px 0 13px">
+      ${d.claimId ? "Your existing logs will come back to this phone."
+        : "Pick yourself from the list if you've used Snacked on another phone."}</div>`;
+}
+
+/* join via #join=… link */
+function joinFromHash() {
+  const m = location.hash.match(/join=([^&]+)/);
+  if (!m) return false;
+  try {
+    const p = JSON.parse(atob(decodeURIComponent(m[1])));
+    if (!p.u || !p.k || !p.h) return false;
+    history.replaceState(null, "", location.pathname);
+    sheet = {mode: "house", draft: {url: p.u, key: p.k, house: p.h, colour: "prus"}};
+    return true;
+  } catch { return false; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   VIEWS
+   ══════════════════════════════════════════════════════════════ */
+function chips(active, action) {
+  const all = [["all", "All"]].concat(Object.keys(CATS).map(c => [c, CATS[c].label]));
+  return `<div class="chiprow">` + all.map(([v, l]) =>
+    `<button class="chip${active === v ? " on" : ""}" data-a="${action}" data-v="${v}">${l}</button>`
+  ).join("") + `</div>`;
+}
+
+function scoreBox(s) {
+  return `<div class="score ${band(s.rating)}">${s.rating}</div>`;
+}
+
+function shelfRow(s, solo) {
+  const drift = s.count > 1 && s.drift ? ` <i>${s.drift > 0 ? "▲" : "▼"}${Math.abs(s.drift)}</i>` : "";
+  const hs = solo ? null : houseScore(s);
+  const faces = hs !== null
+    ? `<div class="hscore">${perMember(s).map(l => mug(l.member, 16)).join("")}
+        House <b>${hs.toFixed(1)}</b></div>` : "";
+  return `<button class="row" data-a="snack" data-v="${esc(s.key)}">
+    <div class="n">${s.count}<small>${s.count === 1 ? "time" : "times"}</small></div>
+    <div class="t">
+      <b>${esc(s.name)}</b>
+      <span>${esc(s.brand)} · <i>${CATS[s.cat].label}</i></span>
+      <span>Last had ${fmtDate(s.last)}${drift}</span>
+      ${faces}
+    </div>
+    ${scoreBox(s)}
+  </button>`;
+}
+
+function shelfList() {
+  const solo = viewMember !== "all";
+  let list = shelf(solo ? entries.filter(e => e.member === viewMember) : entries);
+  if (shelfCat !== "all") list = list.filter(s => s.cat === shelfCat);
+  const q = shelfQ.trim().toLowerCase();
+  if (q) list = list.filter(s => (s.brand + " " + s.name).toLowerCase().includes(q));
+  const sorts = {
+    recent: (a, b) => b.last.localeCompare(a.last),
+    count: (a, b) => b.count - a.count || b.rating - a.rating,
+    best: (a, b) => b.rating - a.rating || b.count - a.count,
+    worst: (a, b) => a.rating - b.rating || b.count - a.count,
+    az: (a, b) => (a.brand + a.name).localeCompare(b.brand + b.name)
+  };
+  list.sort(sorts[shelfSort]);
+  if (!list.length) return `<div class="none">${
+    solo ? esc(memberOf(viewMember).name) + " hasn't logged anything matching that yet."
+    : entries.length ? "Nothing on the shelf matches that. Try another category, or clear the search."
+    : "The shelf is bare. Hit the red <b>+ Log</b> button below and put something on it."}</div>`;
+  return list.map(s => shelfRow(s, solo)).join("");
+}
+
+function memberFilter() {
+  if (!inHouse() || members.length < 2) return "";
+  const one = m => `<button class="mf${viewMember === m.id ? " on" : ""}" data-a="member" data-v="${m.id}">
+      ${mug(m.id, 24)}<span>${esc(m.name.split(" ")[0])}</span></button>`;
+  return `<div class="mfilter">
+    <button class="mf${viewMember === "all" ? " on" : ""}" data-a="member" data-v="all">
+      <span class="allmark">◱</span><span>Everyone</span></button>
+    ${members.map(one).join("")}</div>`;
+}
+
+function viewShelf() {
+  const solo = viewMember !== "all";
+  const n = shelf(solo ? entries.filter(e => e.member === viewMember) : entries).length;
+  return `
+    <div class="search"><input id="shelfSearch" type="text" placeholder="Search your shelf…"
+      autocomplete="off" value="${esc(shelfQ)}"></div>
+    ${memberFilter()}
+    ${chips(shelfCat, "shelfcat")}
+    <div class="areabar"><span class="pin"></span><b>${n}</b> ${n === 1 ? "snack" : "snacks"}
+      ${solo ? "by " + esc(memberOf(viewMember).name) : "logged"}
+      <select id="shelfSort">
+        <option value="recent"${shelfSort === "recent" ? " selected" : ""}>Most recent</option>
+        <option value="count"${shelfSort === "count" ? " selected" : ""}>Most eaten</option>
+        <option value="best"${shelfSort === "best" ? " selected" : ""}>Best rated</option>
+        <option value="worst"${shelfSort === "worst" ? " selected" : ""}>Worst rated</option>
+        <option value="az"${shelfSort === "az" ? " selected" : ""}>A–Z</option>
+      </select></div>
+    <div id="shelfList">${shelfList()}</div>`;
+}
+
+function viewHunt() {
+  const t = tried(), stats = catStats();
+  const doneAll = stats.reduce((s, c) => s + c.done, 0);
+  const pctAll = Math.round(doneAll / CATALOGUE.length * 100);
+
+  if (!dare || t.has(dare.key)) spinDare();
+
+  let untried = CATALOGUE.filter(x => !t.has(x.key));
+  if (huntCat !== "all") untried = untried.filter(x => x.cat === huntCat);
+  const shown = untried.slice(0, 60);
+
+  return `
+    <div class="pad stack">
+      ${dare ? `<div class="dare">
+        <div class="k">The Dare — one you've never had</div>
+        <div class="big">${esc(dare.name)}</div>
+        <div class="sub">${esc(dare.brand)} · ${CATS[dare.cat].label}</div>
+        <div class="row2">
+          <button class="blk go" data-a="dare-log">Log it</button>
+          <button class="blk" data-a="dare-spin">Again</button>
+        </div>
+      </div>` : `<div class="dare"><div class="k">The Dare</div>
+        <div class="big">You've had the lot</div>
+        <div class="sub">Every snack in the catalogue is on your shelf. Genuinely remarkable.</div></div>`}
+
+      <div class="sheetish">
+        <div class="hd">The Sweep <span>${doneAll} of ${CATALOGUE.length}</span></div>
+        <div class="prog">
+          <div class="lab"><b>Everything</b><span>${pctAll}%</span></div>
+          <div class="bar"><i style="width:${pctAll}%"></i></div>
+        </div>
+        ${stats.map(c => `<div class="prog">
+          <div class="lab"><b>${c.label}</b><span>${c.done}/${c.total}</span></div>
+          <div class="bar ${c.bar}"><i style="width:${c.pct}%"></i></div>
+        </div>`).join("")}
+      </div>
+    </div>
+    ${chips(huntCat, "huntcat")}
+    <div class="areabar"><span class="pin"></span><b>${untried.length}</b> still untried</div>
+    <div>${shown.length ? shown.map((x, i) =>
+      `<button class="row" data-a="pick" data-v="${i}">
+        <div class="t"><b>${esc(x.name)}</b><span>${esc(x.brand)} · <i>${CATS[x.cat].label}</i></span></div>
+        <div class="score new">NEW</div>
+      </button>`).join("")
+      : `<div class="none">Nothing left untried in here. Fair play.</div>`}
+    </div>
+    ${untried.length > shown.length
+      ? `<div class="none">…and ${untried.length - shown.length} more. Use <b>+ Log</b> to search the full catalogue.</div>`
+      : ""}`;
+}
+
+function viewTally() {
+  const s = shelf(), logs = entries.length;
+  const avg = s.length ? (s.reduce((t, x) => t + x.rating, 0) / s.length).toFixed(1) : "—";
+  const st = streak();
+  const next = MILESTONES.find(m => m > logs);
+  const stats = catStats().filter(c => c.logs).sort((a, b) => b.logs - a.logs);
+  const maxLogs = stats[0] ? stats[0].logs : 1;
+  const best = [...s].sort((a, b) => b.rating - a.rating || b.count - a.count).slice(0, 5);
+  const worst = [...s].sort((a, b) => a.rating - b.rating || b.count - a.count).slice(0, 3);
+  const recent = [...entries].sort((a, b) => b.date.localeCompare(a.date) || b.ts - a.ts).slice(0, 8);
+  const mk = marks();
+
+  if (!logs) return `<div class="pad stack">
+    <div class="sheetish"><div class="hd">The Tally</div>
+    <div class="none">Nothing counted yet. Log a snack and this page fills up with rankings,
+      streaks, category sweeps and a few marks worth earning.</div></div>
+    <button class="blk go wide" data-a="open-add">Log your first snack</button>
+    ${houseBlock()}</div>`;
+
+  return `<div class="pad stack">
+    <div class="nums">
+      <div class="num"><b>${logs}</b><span>Eaten</span></div>
+      <div class="num"><b>${s.length}</b><span>Different</span></div>
+      <div class="num"><b>${avg}</b><span>Avg score</span></div>
+      <div class="num"><b>${st}</b><span>Day streak</span></div>
+    </div>
+
+    ${next ? `<div class="milestone">
+      <div class="big">${next - logs}</div>
+      <div class="t"><b>to ${next}</b><br>${next - logs === 1 ? "One more snack" : (next - logs) + " more snacks"}
+        and you hit ${next} logged. No pressure.</div></div>` : ""}
+
+    <div class="sheetish">
+      <div class="hd">Hall of Fame <span>your best</span></div>
+      ${best.map((x, i) => `<div class="rank">
+        <span class="p">${i + 1}</span>
+        <span class="nm">${esc(x.name)}<i>${esc(x.brand)} · ${x.count}×</i></span>
+        <span class="d"></span><span class="v">${x.rating}/10</span></div>`).join("")}
+    </div>
+
+    ${s.length >= 5 ? `<div class="sheetish">
+      <div class="hd soft">The Regrets <span>lowest rated</span></div>
+      ${worst.map(x => `<div class="rank">
+        <span class="p">·</span>
+        <span class="nm">${esc(x.name)}<i>${esc(x.brand)}</i></span>
+        <span class="d"></span><span class="v">${x.rating}/10</span></div>`).join("")}
+    </div>` : ""}
+
+    <div class="sheetish">
+      <div class="hd">Where It Goes</div>
+      ${stats.map(c => `<div class="prog">
+        <div class="lab"><b>${c.label}</b><span>${c.logs} ${c.logs === 1 ? "log" : "logs"}</span></div>
+        <div class="bar ${c.bar}"><i style="width:${Math.round(c.logs / maxLogs * 100)}%"></i></div>
+      </div>`).join("")}
+    </div>
+
+    <div class="sheetish">
+      <div class="hd">Marks <span>${mk.filter(m => m[1]).length} of ${mk.length}</span></div>
+      <div class="marks">${mk.map(m =>
+        `<span class="mark${m[1] ? "" : " off"}">${m[0]}</span>`).join("")}</div>
+    </div>
+
+    ${houseBlock()}
+
+    <div class="sheetish">
+      <div class="hd">Lately</div>
+      ${recent.map(e => `<div class="feed">
+        <span class="dt">${fmtDate(e.date)}</span>
+        ${e.member ? mug(e.member, 20) : ""}
+        <span><b>${esc(e.name)}</b> · ${esc(e.brand)}${
+          e.member ? ` <i class="by">${esc(memberOf(e.member).name)}</i>` : ""}</span>
+        <span class="sc">${e.rating}</span></div>`).join("")}
+    </div>
+
+    <div class="acts">
+      <button class="blk" data-a="export">Export</button>
+      <button class="blk" data-a="import">Import</button>
+    </div>
+    <button class="blk soft wide" data-a="wipe">Delete everything</button>
+    <div class="hint">Kept on this device only. Export before you clear your browser or change phone.</div>
+    <input type="file" id="importFile" accept=".json,application/json" style="display:none">
+  </div>`;
+}
+
+
+/* ══ household sections on the Tally ══ */
+function houseBlock() {
+  if (!inHouse()) return `<div class="sheetish">
+    <div class="hd soft">The House <span>not set up</span></div>
+    <div class="none">Log with the rest of the household and you get a shared shelf,
+      a leaderboard, and a running record of who disagrees with whom.</div>
+    <div style="padding:0 12px 12px"><button class="blk go wide" data-a="house">Start a household</button></div>
+  </div>`;
+
+  const board = leaderboard(), sp = splits(), kin = kinship();
+  const twin = kin[0], nemesis = kin.length > 1 ? kin[kin.length - 1] : null;
+  const top = board[0];
+
+  return `<div class="sheetish">
+      <div class="hd">The House <span>${esc(cfg.house)}</span></div>
+      ${board.map((r, i) => `<div class="rank">
+        <span class="p">${i + 1}</span>
+        ${mug(r.id, 24)}
+        <span class="nm" style="margin-left:6px">${esc(memberOf(r.id).name)}
+          <i>${r.unique} different · avg ${r.avg.toFixed(1)}</i></span>
+        <span class="d"></span><span class="v">${r.logs}</span></div>`).join("")}
+      ${top && board.length > 1 ? `<div class="none" style="font-style:normal">
+        <b>${esc(memberOf(top.id).name)}</b> is eating the most in this house. Make of that what you will.
+      </div>` : ""}
+    </div>
+
+    ${sp.length ? `<div class="sheetish">
+      <div class="hd">The Split <span>where you disagree</span></div>
+      ${sp.map(x => `<div class="split">
+        <div class="nm">${esc(x.s.name)}<i>${esc(x.s.brand)}</i></div>
+        <div class="vs">
+          <span class="side">${mug(x.hi.member, 26)}<b>${x.hi.rating}</b>
+            <span>${esc(memberOf(x.hi.member).name)}</span></span>
+          <span class="gap">${x.gap} apart</span>
+          <span class="side" style="justify-content:flex-end">
+            <span>${esc(memberOf(x.lo.member).name)}</span><b>${x.lo.rating}</b>${mug(x.lo.member, 26)}</span>
+        </div></div>`).join("")}
+    </div>` : ""}
+
+    ${twin ? `<div class="sheetish">
+      <div class="hd soft">Taste</div>
+      <div class="rank"><span class="p">≈</span>${mug(twin.id, 24)}
+        <span class="nm" style="margin-left:6px">Taste twin
+          <i>${esc(memberOf(twin.id).name)} — ${twin.gap.toFixed(1)} apart on average</i></span></div>
+      ${nemesis && nemesis.id !== twin.id ? `<div class="rank"><span class="p">✕</span>${mug(nemesis.id, 24)}
+        <span class="nm" style="margin-left:6px">Nemesis
+          <i>${esc(memberOf(nemesis.id).name)} — ${nemesis.gap.toFixed(1)} apart on average</i></span></div>` : ""}
+    </div>` : ""}`;
+}
+
+
+/* ══ colophon — sits at the foot of every tab ══ */
+function colophon() {
+  return `<div class="colophon" aria-hidden="true">Built by FergTech <i>&middot;</i> &copy; 2026</div>`;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SHEETS
+   ══════════════════════════════════════════════════════════════ */
+function pool() {
+  const known = new Set(CATALOGUE.map(x => x.key));
+  const mine = shelf().filter(s => !known.has(s.key)).map(s => ({
+    brand: s.brand, name: s.name, cat: s.cat, key: s.key,
+    hay: (s.brand + " " + s.name).toLowerCase()
+  }));
+  return CATALOGUE.concat(mine);
+}
+
+function searchResults(q) {
+  const t = tried();
+  q = q.trim().toLowerCase();
+  let list;
+  if (!q) {
+    const regulars = shelf().sort((a, b) => b.count - a.count || b.last.localeCompare(a.last)).slice(0, 8);
+    list = regulars.length ? regulars : CATALOGUE.slice(0, 8);
+  } else {
+    const parts = q.split(/\s+/);
+    list = pool().filter(x => parts.every(p => x.hay.includes(p)));
+    list.sort((a, b) => {
+      const rank = x => x.name.toLowerCase().startsWith(q) ? 0
+        : x.brand.toLowerCase().startsWith(q) ? 1 : 2;
+      return rank(a) - rank(b) || a.brand.localeCompare(b.brand);
+    });
+    list = list.slice(0, 40);
+  }
+  lastList = list;
+  if (!list.length) return `<div class="none">Nothing matching “${esc(q)}”.
+    Tap <b>Add your own</b> below and it goes on the shelf anyway.</div>`;
+  return list.map((x, i) => {
+    const has = t.has(x.key);
+    return `<button class="pickrow" data-a="pick" data-v="${i}">
+      <div class="t"><b>${esc(x.name)}</b>
+        <span>${esc(x.brand)} · <em>${CATS[x.cat].label}</em></span></div>
+      ${has ? `<span class="tick">Again</span>` : ""}
+    </button>`;
+  }).join("");
+}
+
+function sheetSearch() {
+  return `<h3>What did you eat?</h3>
+    <p class="lede">${CATALOGUE.length} snacks in the catalogue. Start typing a brand or a flavour.</p>
+    <input class="fld" id="addSearch" type="text" placeholder="Tayto, Brunch, Kimberley…"
+      autocomplete="off" autocapitalize="words">
+    <div class="results" id="results">${searchResults("")}</div>
+    <button class="blk wide" data-a="custom">Add your own</button>
+    <button class="shut" data-a="close">Close</button>`;
+}
+
+function sheetRate() {
+  const prev = shelf().find(s => s.key === (sheet.brand + "|" + sheet.name).toLowerCase());
+  return `<h3>${esc(sheet.name)}</h3>
+    <p class="lede">${esc(sheet.brand)} · ${CATS[sheet.cat].label}${
+      prev ? ` — you've had this ${prev.count}× before, last rated ${prev.rating}/10.` : " — a first."}</p>
+    <div class="lbl">Score it</div>
+    <div class="pad10">${[1,2,3,4,5,6,7,8,9,10].map(n =>
+      `<button data-a="rate" data-v="${n}"${sheet.rating === n ? ' class="on"' : ""}>${n}</button>`).join("")}</div>
+    <div class="verdict ${band(sheet.rating)}">${verdict(sheet.rating)}</div>
+    <div class="lbl">When</div>
+    <input class="fld" id="rateDate" type="date" value="${sheet.date}" max="${today()}">
+    <div class="lbl">Note (optional)</div>
+    <input class="fld" id="rateNote" type="text" maxlength="120"
+      placeholder="Ate the whole bag on the bus" value="${esc(sheet.note || "")}">
+    <button class="blk go wide" data-a="save">Add to the shelf</button>
+    <button class="shut" data-a="close">Cancel</button>`;
+}
+
+/* type-ahead over everything we know, plus anything the house has added */
+function knownBrands() {
+  const mine = shelf().map(s => s.brand);
+  return [...new Set(BRANDS.concat(mine))].sort((a, b) => a.localeCompare(b));
+}
+function knownProducts(brand) {
+  const b = (brand || "").trim().toLowerCase();
+  const mine = shelf().map(s => s.name);
+  if (b) {
+    const forBrand = CATALOGUE.filter(x => x.brand.toLowerCase() === b).map(x => x.name)
+      .concat(shelf().filter(s => s.brand.toLowerCase() === b).map(s => s.name));
+    if (forBrand.length) return [...new Set(forBrand)];
+  }
+  return [...new Set(PRODUCTS.concat(mine))];
+}
+function suggest(list, q, max) {
+  q = (q || "").trim().toLowerCase();
+  if (!q) return list.slice(0, max || 6);
+  const starts = [], has = [];
+  list.forEach(x => {
+    const l = x.toLowerCase();
+    if (l.startsWith(q)) starts.push(x);
+    else if (l.includes(q)) has.push(x);
+  });
+  return starts.concat(has).slice(0, max || 6);
+}
+function suggestBlock(items, action) {
+  if (!items.length) return "";
+  return `<div class="sugs">${items.map((x, i) =>
+    `<button class="sug" data-a="${action}" data-v="${i}">${esc(x)}</button>`).join("")}</div>`;
+}
+
+function sheetCustom() {
+  const d = sheet.draft || {};
+  sheetCustom.brands = suggest(knownBrands(), d.brand);
+  sheetCustom.names = suggest(knownProducts(d.brand), d.name);
+  const dup = d.brand && d.name && CATALOGUE.find(x =>
+    x.brand.toLowerCase() === d.brand.trim().toLowerCase() &&
+    x.name.toLowerCase() === d.name.trim().toLowerCase());
+  return `<h3>Add your own</h3>
+    <p class="lede">Something the catalogue is missing, a limited edition, or a bag from the deli counter.
+      Suggestions appear as you type.</p>
+    <div class="lbl">Brand</div>
+    <input class="fld nudge-b" id="cBrand" type="text" placeholder="e.g. Keogh's"
+      autocapitalize="words" autocomplete="off" value="${esc(d.brand || "")}">
+    ${suggestBlock(sheetCustom.brands, "pick-brand")}
+    <div class="lbl">What is it</div>
+    <input class="fld" id="cName" type="text" placeholder="e.g. Bacon & Cabbage"
+      autocapitalize="words" autocomplete="off" value="${esc(d.name || "")}">
+    ${suggestBlock(sheetCustom.names, "pick-name")}
+    ${dup ? `<div class="verdict mid">That one's already in the catalogue under
+      ${esc(dup.brand)}. Adding it again is fine, but searching for it on the Log screen is quicker.</div>` : ""}
+    <div class="lbl">Category</div>
+    <select class="fld" id="cCat">${Object.keys(CATS).map(c =>
+      `<option value="${c}"${(d.cat || "crisps") === c ? " selected" : ""}>${CATS[c].label}</option>`).join("")}</select>
+    <button class="blk go wide" data-a="custom-save">Continue</button>
+    <button class="shut" data-a="close">Cancel</button>`;
+}
+
+function sheetDetail() {
+  const s = shelf().find(x => x.key === sheet.key);
+  if (!s) return `<h3>Gone</h3><button class="shut" data-a="close">Close</button>`;
+  return `<h3>${esc(s.name)}</h3>
+    <p class="lede">${esc(s.brand)} · ${CATS[s.cat].label}</p>
+    <div class="nums" style="margin-bottom:13px">
+      <div class="num"><b>${s.count}</b><span>Times</span></div>
+      <div class="num"><b>${s.rating}</b><span>Current</span></div>
+      <div class="num"><b>${s.avg.toFixed(1)}</b><span>Average</span></div>
+    </div>
+    <div class="verdict ${band(s.rating)}">${verdict(s.rating)}${
+      s.count > 1 && s.drift ? ` Started at ${s.firstRating}, now ${s.rating} — it's ${
+        s.drift > 0 ? "growing on you" : "wearing thin"}.` : ""}</div>
+    ${inHouse() && perMember(s).length > 1 ? `<div class="lbl">What the house thinks</div>
+      <div class="hist" style="max-height:none">${houseTable(s).map(l => `<div class="hline">
+        ${mug(l.member, 22)}
+        <span class="d"><b style="font-weight:600">${esc(memberOf(l.member).name)}</b>
+          — last had it ${fmtDate(l.date)}</span>
+        <span class="r">${l.rating}</span></div>`).join("")}</div>` : ""}
+    ${inHouse() ? `<div class="verdict" style="font-style:normal">
+      Brought home by <b>${esc(memberOf(firstLogger(s).member).name)}</b>
+      on ${fmtLong(firstLogger(s).date)}.</div>` : ""}
+    <div class="lbl">Every time you've had it</div>
+    <div class="hist">${s.logs.map(l => `<div class="hline">
+      ${l.member ? mug(l.member, 22) : ""}
+      <span class="r">${l.rating}</span>
+      <span class="d">${l.member && inHouse() ? esc(memberOf(l.member).name) + " · " : ""}${
+        fmtLong(l.date)}${l.note ? `<q>${esc(l.note)}</q>` : ""}</span>
+      <button class="x" data-a="del-log" data-v="${l.id}">Remove</button></div>`).join("")}</div>
+    <button class="blk go wide" data-a="again" data-v="${esc(s.key)}">Had it again</button>
+    <button class="shut" data-a="close">Close</button>`;
+}
+
+function renderSheet() {
+  if (!sheet) { $("layer").innerHTML = ""; return; }
+  const body = sheet.mode === "search" ? sheetSearch()
+    : sheet.mode === "rate" ? sheetRate()
+    : sheet.mode === "custom" ? sheetCustom()
+    : sheet.mode === "house" ? sheetHouse() : sheetDetail();
+  $("layer").innerHTML = `<div class="scrim" data-a="scrim"><div class="slip" id="slip">${body}</div></div>`;
+  if (sheet.mode === "search") setTimeout(() => $("addSearch")?.focus(), 60);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RENDER
+   ══════════════════════════════════════════════════════════════ */
+let toastTimer = null;
+function toast(title, msg, warn) {
+  clearTimeout(toastTimer);
+  const t = document.createElement("div");
+  t.className = "toast" + (warn ? " warn" : "");
+  t.innerHTML = `<b>${esc(title)}</b>${esc(msg)}`;
+  $("app").appendChild(t);
+  toastTimer = setTimeout(() => t.remove(), 2600);
+}
+
+function render() {
+  const st = streak();
+  const syncPill = !inHouse() ? ""
+    : `<button class="hbtn${sync.status === "error" ? " err" : sync.status === "syncing" ? " busy" : ""}"
+        data-a="house">${me() ? mug(me().id, 20) : ""}${
+        sync.status === "syncing" ? "Syncing" : sync.status === "error" ? "Offline" : "House"}</button>`;
+  $("hbits").innerHTML = syncPill +
+    (st > 1 ? `<div class="hcount streak"><b>${st}</b>day run</div>` : "") +
+    `<div class="hcount"><b>${entries.length}</b>eaten</div>`;
+  document.querySelectorAll(".tab[data-a=tab]").forEach(b =>
+    b.classList.toggle("on", b.dataset.v === view));
+  $("main").innerHTML = (view === "shelf" ? viewShelf() : view === "hunt" ? viewHunt() : viewTally())
+    + colophon();
+  $("main").scrollTop = 0;
+  renderSheet();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ACTIONS
+   ══════════════════════════════════════════════════════════════ */
+function spinDare() {
+  const t = tried();
+  const left = CATALOGUE.filter(x => !t.has(x.key));
+  dare = left.length ? left[Math.floor(Math.random() * left.length)] : null;
+}
+
+function openRate(item) {
+  sheet = {mode: "rate", brand: item.brand, name: item.name, cat: item.cat,
+    rating: 7, date: today(), note: ""};
+  renderSheet();
+}
+
+function act(a, v) {
+  switch (a) {
+    case "tab": view = v; render(); break;
+    case "open-add": sheet = {mode: "search"}; renderSheet(); break;
+    case "close": case "scrim": sheet = null; renderSheet(); break;
+    case "shelfcat": shelfCat = v; render(); break;
+    case "member": viewMember = v; view = "shelf"; render(); break;
+    case "huntcat": huntCat = v; render(); break;
+
+    case "pick": { const it = lastList[+v]; if (it) openRate(it); break; }
+    case "dare-spin": spinDare(); render(); break;
+    case "dare-log": if (dare) openRate(dare); break;
+
+    case "snack": sheet = {mode: "detail", key: v}; renderSheet(); break;
+    case "again": { const s = shelf().find(x => x.key === v); if (s) openRate(s); break; }
+
+    case "custom": sheet = {mode: "custom", draft: {}}; renderSheet(); break;
+    case "pick-brand": {
+      const b = sheetCustom.brands[+v];
+      sheet.draft = Object.assign({}, sheet.draft, {brand: b, cat: brandCat(b) || sheet.draft.cat});
+      renderSheet();
+      setTimeout(() => $("cName") && $("cName").focus(), 40);
+      break;
+    }
+    case "pick-name": {
+      const n = sheetCustom.names[+v];
+      const hit = CATALOGUE.find(x => x.name === n &&
+        (!sheet.draft.brand || x.brand.toLowerCase() === sheet.draft.brand.trim().toLowerCase()));
+      sheet.draft = Object.assign({}, sheet.draft, {name: n,
+        brand: sheet.draft.brand || (hit ? hit.brand : ""),
+        cat: (hit && hit.cat) || sheet.draft.cat});
+      renderSheet();
+      break;
+    }
+    case "custom-save": {
+      const b = $("cBrand").value.trim(), n = $("cName").value.trim();
+      if (!b || !n) { toast("Hold on", "Both a brand and a name, please.", true); return; }
+      openRate({brand: b, name: n, cat: $("cCat").value});
+      break;
+    }
+
+    case "rate": sheet.rating = +v; renderSheet(); break;
+    case "save": {
+      const d = $("rateDate").value;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) { toast("Hold on", "That date won't do.", true); return; }
+      sheet.note = $("rateNote").value.trim();
+      const before = entries.length;
+      const logId = newId();
+      entries.push({id: logId, brand: sheet.brand, name: sheet.name, cat: sheet.cat,
+        rating: sheet.rating, date: d, ts: Date.now(), note: sheet.note,
+        member: inHouse() ? me().id : ""});
+      save();
+      if (inHouse()) { pending.add(logId); savePending(); scheduleSync(); }
+      const hit = MILESTONES.find(m => m > before && m <= entries.length);
+      const name = sheet.name;
+      sheet = null;
+      if (joinFromHash()) { /* sheet is queued by joinFromHash */ }
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && inHouse()) doSync(true);
+});
+setInterval(() => { if (!document.hidden && inHouse()) doSync(true); }, 45000);
+
+render();
+if (inHouse()) doSync(true);
+      if (hit) toast("Milestone", `That's ${hit} snacks logged. Steady on.`);
+      else toast("On the shelf", `${name} — ${entries[entries.length - 1].rating}/10.`);
+      break;
+    }
+
+    case "del-log": {
+      if (!confirm("Remove this one time you ate it?")) return;
+      entries = entries.filter(e => e.id !== v);
+      save();
+      if (inHouse()) { pending.delete(v); dead.add(v); savePending(); scheduleSync(); }
+      if (!shelf().some(s => s.key === sheet.key)) sheet = null;
+      if (joinFromHash()) { /* sheet is queued by joinFromHash */ }
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && inHouse()) doSync(true);
+});
+setInterval(() => { if (!document.hidden && inHouse()) doSync(true); }, 45000);
+
+render();
+if (inHouse()) doSync(true);
+      break;
+    }
+
+    case "house": sheet = {mode: "house", draft: sheet && sheet.draft}; renderSheet(); break;
+    case "colour": {
+      if (inHouse() && !(sheet.draft)) { cfg.me.colour = v; saveCfg(); }
+      else { sheet.draft = Object.assign({}, sheet.draft, {colour: v}); }
+      renderSheet();
+      break;
+    }
+    case "check": {
+      const url = $("hUrl").value.trim(), key = $("hKey").value.trim();
+      if (!url || !key) { toast("Hold on", "Paste the URL and key first.", true); return; }
+      sheet.draft = Object.assign({}, sheet.draft, {
+        name: $("hName").value, url, key, house: $("hCode").value});
+      sheet.checking = true; sheet.check = null; renderSheet();
+      checkSetup(url, key).then(async res => {
+        sheet.checking = false; sheet.check = res;
+        if (res.every(x => x.ok)) {
+          try { sheet.people = await fetchPeople(url, key, $("hCode").value.trim().toUpperCase()); }
+          catch { sheet.people = null; }
+        }
+        renderSheet();
+      }).catch(err => {
+        sheet.checking = false;
+        sheet.check = [{ok: false, what: "The check itself fell over", fix: String(err.message || err)}];
+        renderSheet();
+      });
+      break;
+    }
+    case "claim": {
+      sheet.draft = Object.assign({}, sheet.draft, {name: $("hName").value, url: $("hUrl").value,
+        key: $("hKey").value, house: $("hCode").value});
+      if (v === "new") { delete sheet.draft.claimId; }
+      else {
+        const p = sheet.people[+v];
+        sheet.draft.claimId = p.id;
+        sheet.draft.name = p.name;
+        sheet.draft.colour = p.colour;
+      }
+      renderSheet();
+      break;
+    }
+    case "house-save": {
+      const name = $("hName").value.trim();
+      const url = $("hUrl").value.trim().replace(/\/+$/, "");
+      const key = $("hKey").value.trim();
+      const code = $("hCode").value.trim().toUpperCase();
+      const colour = (sheet.draft && sheet.draft.colour) || "verm";
+      if (!name || !url || !key || !code) { toast("Hold on", "Every field, please.", true); return; }
+      if (!/^https:\/\/[^\s]+$/.test(url)) { toast("Hold on", "That URL doesn't look right.", true); return; }
+      const claimed = sheet.draft && sheet.draft.claimId;
+      cfg = {url, key, house: code, me: {id: claimed || newId(), name, colour}};
+      saveCfg();
+      members = [cfg.me]; saveMembers();
+      entries.forEach(e => { if (!e.member) { e.member = cfg.me.id; pending.add(e.id); } });
+      save(); savePending();
+      sheet = null; if (joinFromHash()) { /* sheet is queued by joinFromHash */ }
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && inHouse()) doSync(true);
+});
+setInterval(() => { if (!document.hidden && inHouse()) doSync(true); }, 45000);
+
+render();
+if (inHouse()) doSync(true);
+      toast("House open", "Code " + code + ". Sending your shelf up now.");
+      doSync(true);
+      break;
+    }
+    case "house-rename": {
+      const name = $("hName").value.trim();
+      if (!name) return;
+      cfg.me.name = name; saveCfg();
+      members = members.map(m => m.id === cfg.me.id ? Object.assign({}, m, cfg.me) : m);
+      saveMembers(); renderSheet();
+      toast("Saved", "That's you sorted.");
+      doSync(true);
+      break;
+    }
+    case "copy-link": {
+      const link = shareLink();
+      (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject())
+        .then(() => toast("Copied", "Send that to the household."))
+        .catch(() => { $("hLink").select(); toast("Select and copy", "Clipboard is blocked here.", true); });
+      break;
+    }
+    case "sync": doSync(); break;
+    case "leave": {
+      if (!confirm("Leave the household? Your logs stay on this phone.")) return;
+      cfg = null; members = []; pending.clear(); dead.clear();
+      saveCfg(); saveMembers(); savePending();
+      sheet = null; if (joinFromHash()) { /* sheet is queued by joinFromHash */ }
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && inHouse()) doSync(true);
+});
+setInterval(() => { if (!document.hidden && inHouse()) doSync(true); }, 45000);
+
+render();
+if (inHouse()) doSync(true);
+      toast("Left", "Back to a shelf of your own.", true);
+      break;
+    }
+
+    case "export": {
+      const blob = new Blob([JSON.stringify(entries, null, 2)], {type: "application/json"});
+      const url = URL.createObjectURL(blob), a2 = document.createElement("a");
+      a2.href = url; a2.download = "snacked-backup-" + today() + ".json"; a2.click();
+      URL.revokeObjectURL(url);
+      toast("Exported", "Backup saved to your downloads.");
+      break;
+    }
+    case "import": $("importFile").click(); break;
+    case "wipe": {
+      if (!entries.length) return;
+      if (!confirm("Delete every snack you've logged? This can't be undone.")) return;
+      if (inHouse()) { entries.forEach(e => dead.add(e.id)); pending.clear(); savePending(); scheduleSync(); }
+      entries = []; save(); if (joinFromHash()) { /* sheet is queued by joinFromHash */ }
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && inHouse()) doSync(true);
+});
+setInterval(() => { if (!document.hidden && inHouse()) doSync(true); }, 45000);
+
+render();
+if (inHouse()) doSync(true);
+      toast("Cleared", "Shelf is bare again.", true);
+      break;
+    }
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   WIRING
+   ══════════════════════════════════════════════════════════════ */
+const app = $("app");
+app.addEventListener("click", e => {
+  const el = e.target.closest("[data-a]");
+  if (!el) return;
+  if (el.dataset.a === "scrim" && e.target !== el) return;   // taps inside the sheet stay put
+  act(el.dataset.a, el.dataset.v);
+});
+
+app.addEventListener("input", e => {
+  if (e.target.id === "shelfSearch") { shelfQ = e.target.value; $("shelfList").innerHTML = shelfList(); }
+  if (e.target.id === "addSearch") { $("results").innerHTML = searchResults(e.target.value); }
+  if (e.target.id === "cBrand" || e.target.id === "cName") {
+    const field = e.target.id === "cBrand" ? "brand" : "name";
+    const pos = e.target.selectionStart;
+    sheet.draft = Object.assign({}, sheet.draft, {[field]: e.target.value, cat: $("cCat").value});
+    if (field === "brand") {
+      const known = brandCat(e.target.value.trim());
+      if (known) sheet.draft.cat = known;
+    }
+    renderSheet();
+    const el = $(e.target.id);
+    if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch {} }
+  }
+});
+
+app.addEventListener("change", e => {
+  if (e.target.id === "shelfSort") { shelfSort = e.target.value; $("shelfList").innerHTML = shelfList(); }
+  if (e.target.id === "importFile") {
+    const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const x = JSON.parse(r.result);
+        if (!Array.isArray(x)) throw 0;
+        const ok = clean(x);
+        if (!ok.length) throw 0;
+        if (confirm(`Replace your shelf with this backup (${ok.length} logs)?`)) {
+          entries = ok; save();
+          if (inHouse()) { ok.forEach(e => pending.add(e.id)); savePending(); scheduleSync(); }
+          if (joinFromHash()) { /* sheet is queued by joinFromHash */ }
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && inHouse()) doSync(true);
+});
+setInterval(() => { if (!document.hidden && inHouse()) doSync(true); }, 45000);
+
+render();
+if (inHouse()) doSync(true);
+          toast("Imported", ok.length + " logs restored.");
+        }
+      } catch { toast("No good", "That isn't a Snacked backup.", true); }
+      e.target.value = "";
+    };
+    r.readAsText(f);
+  }
+});
+
+if ("serviceWorker" in navigator)
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
+
+/* Ask the browser to treat this data as persistent rather than evictable.
+   Chrome grants it silently once the app is installed; Safari ignores it. */
+if (navigator.storage && navigator.storage.persist)
+  navigator.storage.persist().catch(() => {});
+
+if (joinFromHash()) { /* sheet is queued by joinFromHash */ }
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && inHouse()) doSync(true);
+});
+setInterval(() => { if (!document.hidden && inHouse()) doSync(true); }, 45000);
+
+render();
+if (inHouse()) doSync(true);
+</script>
+</body>
+</html>
