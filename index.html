@@ -271,6 +271,14 @@ nav{display:flex;border-top:2px solid var(--ink);background:var(--stock-2);
 .qty .q b{font-family:var(--disp);font-weight:800;font-size:26px;letter-spacing:-.04em;line-height:1}
 .qty .q span{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-60);margin-top:3px}
 
+.manage{border:1.5px solid var(--ink);background:var(--panel);margin-bottom:14px}
+.mrow{display:flex;align-items:center;gap:9px;padding:9px 10px}
+.mrow+.mrow{border-top:1px dotted rgba(32,32,28,.22)}
+.mrow .who{flex:1;min-width:0}
+.mrow .who b{display:block;font-weight:600;font-size:13px}
+.mrow .who i{display:block;font-style:normal;font-size:10.5px;color:var(--ink-60);margin-top:2px}
+.mrow .blk{flex:none;padding:7px 9px;font-size:10px}
+
 .peoples{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:9px}
 .peep{display:flex;align-items:center;gap:7px;border:1.5px solid var(--ink);background:var(--panel);
   padding:5px 11px 5px 5px;box-shadow:2px 2px 0 rgba(32,32,28,.2)}
@@ -970,10 +978,21 @@ async function pull() {
   save();
 
   if (mr.ok) {
+    // The server is the authority on who is in the house, otherwise someone
+    // removed on one phone lingers forever on all the others.
     const rm = await mr.json();
-    const map = new Map(members.map(m => [m.id, m]));
-    rm.forEach(m => map.set(m.id, {id: m.id, name: m.name, colour: m.colour, ts: Number(m.ts) || 0}));
-    members = [...map.values()];
+    const map = new Map(rm.map(m =>
+      [m.id, {id: m.id, name: m.name, colour: m.colour, ts: Number(m.ts) || 0}]));
+    if (me() && !map.has(me().id)) map.set(me().id, Object.assign({ts: 0}, me()));
+    if (rm.length) {
+      // A real answer: trust it, so people removed elsewhere actually disappear.
+      members = [...map.values()];
+      if (viewMember !== "all" && !map.has(viewMember)) viewMember = "all";
+    } else {
+      // An empty answer means something is off, not that the house emptied.
+      // Keep what we know rather than turning everyone into "Someone".
+      members = [...new Map(members.map(m => [m.id, m]).concat([...map])).values()];
+    }
     saveMembers();
   }
 }
@@ -1197,6 +1216,9 @@ function sheetHouse() {
     <div class="mugbar">${(members.length ? members : [me()]).map(m =>
       `<div class="mugc">${mug(m.id, 38)}<b>${esc(m.name)}</b>
         <span>${(board.find(x => x.id === m.id) || {logs: 0}).logs} logs</span></div>`).join("")}</div>
+    ${members.length > 1 ? `<button class="blk mini wide" data-a="manage" style="margin-bottom:14px">${
+      sheet.manage ? "Done tidying" : "Tidy up the household"}</button>` : ""}
+    ${sheet.manage ? managePanel() : ""}
     <div class="lbl">Invite the rest of them</div>
     <input class="fld" id="hLink" type="text" readonly value="${esc(shareLink())}">
     <button class="blk wide" data-a="copy-link">Copy invite link</button>
@@ -1224,6 +1246,34 @@ function checkBlock() {
     `<div class="ck${c.ok ? " ok" : ""}"><span class="m">${c.ok ? "✓" : "✕"}</span>
       <div><b>${esc(c.what)}</b>${c.fix ? `<span>${esc(c.fix)}</span>` : ""}</div></div>`).join("")}</div>`;
 }
+
+/* Move every log from one person onto another, then retire the spare.
+   This is what a duplicate needs: nothing is lost, it just moves house. */
+async function mergeMembers(fromId, intoId) {
+  const into = memberOf(intoId);
+  const r = await fetch(rest("snack_logs?house=eq." + encodeURIComponent(cfg.house) +
+    "&member=eq." + encodeURIComponent(fromId)), {
+    method: "PATCH",
+    headers: headers({"Prefer": "return=minimal"}),
+    body: JSON.stringify({member: intoId, member_name: into.name})
+  });
+  if (!r.ok) throw new Error("Couldn't move the logs (" + r.status + "). " + (await r.text()).slice(0, 100));
+  await removeMember(fromId);
+  entries.forEach(e => { if (e.member === fromId) e.member = intoId; });
+  save();
+  if (me().id === fromId) { cfg.me.id = intoId; saveCfg(); }
+}
+
+async function removeMember(id) {
+  const r = await fetch(rest("snack_members?house=eq." + encodeURIComponent(cfg.house) +
+    "&id=eq." + encodeURIComponent(id)), {method: "DELETE", headers: headers()});
+  if (!r.ok && r.status !== 404)
+    throw new Error("Couldn't remove them (" + r.status + "). " + (await r.text()).slice(0, 100));
+  members = members.filter(m => m.id !== id);
+  saveMembers();
+}
+
+const logsBy = id => entries.filter(e => e.member === id).length;
 
 /* Who's already in this house? Asked before joining, so a new phone can
    reclaim an existing person rather than becoming a stranger. */
@@ -1262,6 +1312,34 @@ function readInvite(text) {
     if (!p.u || !p.k || !p.h) return null;
     return {url: p.u, key: p.k, house: p.h};
   } catch { return null; }
+}
+
+function managePanel() {
+  if (sheet.mergeFrom) {
+    const from = memberOf(sheet.mergeFrom);
+    const others = members.filter(m => m.id !== sheet.mergeFrom);
+    const n = logsBy(sheet.mergeFrom);
+    return `<div class="verdict mid" style="font-style:normal">
+        Move everything <b>${esc(from.name)}</b> has logged onto whom?
+        ${n} ${n === 1 ? "log" : "logs"} will change hands. Nothing is deleted.</div>
+      <div class="peoples">${others.map(m =>
+        `<button class="peep" data-a="merge-into" data-v="${esc(m.id)}">
+          ${mug(m.id, 30)}<b>${esc(m.name)}</b></button>`).join("")}</div>
+      <button class="blk soft wide" data-a="merge-cancel" style="margin-bottom:14px">Never mind</button>`;
+  }
+  return `<div class="hint" style="text-align:left;margin-bottom:11px">
+      Someone in twice? <b>Merge</b> moves their logs onto the right person and retires the spare.
+      <b>Remove</b> only works once they've no logs left.</div>
+    <div class="manage">${members.map(m => {
+      const n = logsBy(m.id);
+      return `<div class="mrow">
+        ${mug(m.id, 28)}
+        <span class="who"><b>${esc(m.name)}</b><i>${n} ${n === 1 ? "log" : "logs"}${
+          m.id === me().id ? " \u00b7 you" : ""}</i></span>
+        <button class="blk mini" data-a="merge-pick" data-v="${esc(m.id)}">Merge</button>
+        <button class="blk mini ${n ? "soft" : ""}" data-a="member-remove" data-v="${esc(m.id)}">Remove</button>
+      </div>`;
+    }).join("")}</div>`;
 }
 
 function joinFromHash() {
@@ -1996,6 +2074,33 @@ if (inHouse()) doSync(true);
       saveMembers(); renderSheet();
       toast("Saved", "That's you sorted.");
       doSync(true);
+      break;
+    }
+    case "manage": sheet.manage = !sheet.manage; sheet.mergeFrom = null; renderSheet(); break;
+    case "merge-pick": sheet.mergeFrom = v; renderSheet(); break;
+    case "merge-cancel": sheet.mergeFrom = null; renderSheet(); break;
+    case "merge-into": {
+      const from = memberOf(sheet.mergeFrom), into = memberOf(v);
+      if (!confirm(`Move everything ${from.name} logged onto ${into.name}?`)) return;
+      const fromId = sheet.mergeFrom;
+      sheet.mergeFrom = null; sheet.busy = true; renderSheet();
+      mergeMembers(fromId, v)
+        .then(() => doSync(true))
+        .then(() => { sheet.busy = false; renderSheet();
+          toast("Merged", from.name + "'s logs now belong to " + into.name + "."); })
+        .catch(err => { sheet.busy = false; renderSheet();
+          toast("Didn't work", String(err.message || err).slice(0, 90), true); });
+      break;
+    }
+    case "member-remove": {
+      if (logsBy(v)) { toast("Merge them first", "They still have logs. Merging keeps those.", true); return; }
+      if (v === me().id) { toast("That's you", "Use Leave house instead.", true); return; }
+      const who = memberOf(v).name;
+      if (!confirm(`Remove ${who} from the household?`)) return;
+      removeMember(v)
+        .then(() => doSync(true))
+        .then(() => { renderSheet(); toast("Removed", who + " is out of the household."); })
+        .catch(err => toast("Didn't work", String(err.message || err).slice(0, 90), true));
       break;
     }
     case "copy-link": {
